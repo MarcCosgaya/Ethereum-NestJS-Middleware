@@ -1,19 +1,59 @@
-import { Controller, Get, Post, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, Put, Body, BadRequestException } from '@nestjs/common';
 import { ContractsService } from './contracts.service';
+import { DeployDto } from './dtos/deploy.dto';
+import { GetOneDto } from './dtos/get-one.dto';
+import { UpdateFunctionDto } from './dtos/update-function.dto';
+import { ViewFunctionDto } from './dtos/view-function.dto';
 
 @Controller('contracts')
 export class ContractsController {
     constructor(private contractsService: ContractsService) {}
 
-    @Get(':id/call/:func')
-    view(@Param('id') id: string, @Param('func') func: string, @Query() params: any) {
+    @Get(':id/call/:func') // Call view function in smart contract.
+    // id: ID of smart contract.
+    // func: Function name in smart contract. 
+    viewFunction(@Param() queryParams: ViewFunctionDto, @Query() params: any) {
+        const { id, func } = queryParams;
         const { args } = params;
-        return this.contractsService.get(func, args);
+        return this.contractsService.get(id, func, args);
     }
 
-    @Post(':id/call/:func')
-    update(@Param('id') id: string, @Param('func') func: string, @Query() params: any) {
+    @Post(':id/call/:func') // Call update function in smart contract.
+    // id: ID of smart contract.
+    // func: Function name in smart contract.
+    updateFunction(@Param() queryParams: UpdateFunctionDto, @Query() params: any) {
+        const { id, func } = queryParams;
         const { args } = params;
-        return this.contractsService.set(func, args);
+        return this.contractsService.set(id, func, args);
+    }
+
+    @Post() // Deploy a new smart contract.
+    // body.abi: JSON-formatted ABI of compiled smart contract.
+    // body.bytecode: hex-formatted bytecode of compiled smart contract.
+    // body.source: Minified source code of the smart contract.
+    deploy(@Body() body: DeployDto) {
+        const { abi, bytecode, source } = body;
+        // TODO: check if source code is minified
+        return this.contractsService.deploy(abi, bytecode, source)
+    }
+
+    @Put() // Update DB from already deployed smart contract.
+    updateDB() {
+
+    }
+
+    @Get() // Get list of all cached smart contracts.
+    getAll() {
+        return this.contractsService.getAll();
+    }
+
+    @Get(':id') // Get a single contract.
+    // id: ID of smart contract.
+    getOne(@Param() queryParams: GetOneDto) {
+        return this.contractsService.getOne(queryParams.id);
+    }
+
+    validate() {
+        // TODO: validate source code with etherscan or similar
     }
 }
