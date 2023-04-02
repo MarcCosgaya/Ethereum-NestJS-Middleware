@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, InternalServerErrorException, ServiceUnavailableException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, BadRequestException, InternalServerErrorException, ServiceUnavailableException, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { ethers } from "ethers";
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -47,6 +47,15 @@ export class ContractsService {
         return returnValue;
     }
 
+    async _store(abi: string, bytecode: string, source: string, address: string) {
+        try {
+            return await this.prisma.contract.create({ data: { abi, bytecode, source, address } });
+        }
+        catch (err) {
+            throw new ConflictException;
+        }
+    }
+
     async deploy(abi: string, bytecode: string, source: string) {
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
         const signer = new ethers.Wallet(process.env.PKEY, provider);
@@ -57,10 +66,7 @@ export class ContractsService {
 
             const addr = await contract.getAddress();
 
-            const storedContract = this.prisma.contract.create({
-                data: { abi, bytecode, source, address: addr }
-            });
-            return storedContract;
+            return this._store(abi, bytecode, source, addr)
         }
         catch (err) {
             console.log(err)
@@ -83,5 +89,12 @@ export class ContractsService {
             .catch(() => { throw new NotFoundException });
         this._parseABI(contract);
         return contract;
+    }
+
+    async updateContract(tx: string, abi: string, source: string) {
+        const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
+        const addr = (await provider.getTransactionReceipt(tx)).contractAddress;
+        const bytecode = (await provider.getTransaction(tx)).data.slice(2);
+        return this._store(abi, bytecode, source, addr);
     }
 }

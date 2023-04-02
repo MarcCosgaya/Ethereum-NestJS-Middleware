@@ -2,6 +2,7 @@ import { Controller, Get, Post, Param, Query, Put, Body, BadRequestException } f
 import { ContractsService } from './contracts.service';
 import { DeployDto } from './dtos/deploy.dto';
 import { GetOneDto } from './dtos/get-one.dto';
+import { UpdateContractDto } from './dtos/update-contract.dto';
 import { UpdateFunctionDto } from './dtos/update-function.dto';
 import { ViewFunctionDto } from './dtos/view-function.dto';
 
@@ -11,7 +12,8 @@ export class ContractsController {
 
     @Get(':id/call/:func') // Call view function in smart contract.
     // id: ID of smart contract.
-    // func: Function name in smart contract. 
+    // func: Function name in smart contract.
+    // Returns requested value.
     viewFunction(@Param() queryParams: ViewFunctionDto, @Query() params: any) {
         const { id, func } = queryParams;
         const { args } = params;
@@ -21,6 +23,7 @@ export class ContractsController {
     @Post(':id/call/:func') // Call update function in smart contract.
     // id: ID of smart contract.
     // func: Function name in smart contract.
+    // Returns tx information.
     updateFunction(@Param() queryParams: UpdateFunctionDto, @Query() params: any) {
         const { id, func } = queryParams;
         const { args } = params;
@@ -31,24 +34,32 @@ export class ContractsController {
     // body.abi: JSON-formatted ABI of compiled smart contract.
     // body.bytecode: hex-formatted bytecode of compiled smart contract.
     // body.source: Minified source code of the smart contract.
+    // Returns contract information.
     deploy(@Body() body: DeployDto) {
         const { abi, bytecode, source } = body;
         // TODO: check if source code is minified
         return this.contractsService.deploy(abi, bytecode, source)
     }
 
-    @Put() // Update DB from already deployed smart contract.
-    updateDB() {
-
+    @Put() // Update contract in DB from already deployed contract.
+    // body.tx: Hash of the transaction that deployed the contract.
+    // body.abi: JSON-formatted ABI of compiled smart contract.
+    // body.source: Minified source code of the smart contract.
+    // Returns contract information.
+    updateContract(@Body() body: UpdateContractDto) {
+        const { tx, abi, source } = body;
+        return this.contractsService.updateContract(tx, abi, source);
     }
 
     @Get() // Get list of all cached smart contracts.
+    // Returns list of contracts.
     getAll() {
         return this.contractsService.getAll();
     }
 
     @Get(':id') // Get a single contract.
     // id: ID of smart contract.
+    // Returns a single contract.
     getOne(@Param() queryParams: GetOneDto) {
         return this.contractsService.getOne(queryParams.id);
     }
