@@ -53,8 +53,7 @@ export class TransactionsService {
         return storedTransaction;
     }
 
-    _parseBigInts(tx: any) { // Parse BigInts of a stored tx into strings.
-        // JSON.stringify still doesn't work with BigInts :(
+    _parseBigInts(tx: any) { // Parse BigInts of a stored tx into strings because JSON.stringify still doesn't work with BigInts :(
         tx.quantity = tx.quantity.toString();
         tx.gasUsed = tx.gasUsed.toString();
         tx.gasPrice = tx.gasPrice.toString();
