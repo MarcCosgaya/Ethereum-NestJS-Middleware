@@ -21,3 +21,15 @@ model contract {
   source String
   address String @unique
 }
+
+model transaction {
+  id Int @id @default(autoincrement())
+  from String
+  to String
+  quantity BigInt
+  hash String @unique
+  blockHeight Int
+  gasUsed BigInt
+  gasPrice BigInt
+  gasLimit BigInt
+}

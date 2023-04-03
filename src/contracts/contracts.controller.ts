@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Query, Put, Body, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, Put, Body } from '@nestjs/common';
 import { ContractsService } from './contracts.service';
 import { DeployDto } from './dtos/deploy.dto';
 import { GetOneDto } from './dtos/get-one.dto';

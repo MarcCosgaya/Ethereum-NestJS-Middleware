@@ -80,7 +80,7 @@ export class ContractsService {
 
     async getAll() {
         const contracts = await this.prisma.contract.findMany();
-        contracts.map(this._parseABI);
+        contracts.forEach(this._parseABI);
         return contracts;
     }
 
