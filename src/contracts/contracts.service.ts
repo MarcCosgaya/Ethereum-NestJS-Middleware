@@ -1,10 +1,11 @@
 import { Injectable, BadRequestException, InternalServerErrorException, ServiceUnavailableException, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { ethers } from "ethers";
+import { TransactionsService } from 'src/transactions/transactions.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ContractsService {
-    constructor(private prisma: PrismaService) {}
+    constructor(private prisma: PrismaService, private transactionsService: TransactionsService) {}
 
     async get(id: number, func: string, args: string[]) {
         const storedContract = await this.getOne(id);
@@ -30,12 +31,12 @@ export class ContractsService {
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
         const signer = new ethers.Wallet(process.env.PKEY, provider);
         const contract = new ethers.Contract(storedContract.address, storedContract.abi, signer);
-        
+
         try {
-            var returnValue = args && args.length ? await contract[func](args) : await contract[func]();
+            var receipt = args && args.length ? await contract[func](...args) : await contract[func]();
         }
         catch (err) {
-            console.log(err)
+            console.error(err)
             switch (err.code) {
                 case 'UNSUPPORTED_OPERATION': throw new ForbiddenException;
                 case 'ECONNREFUSED': throw new ServiceUnavailableException;
@@ -44,10 +45,10 @@ export class ContractsService {
             }
         }
 
-        return returnValue;
+        return this.transactionsService.updateTransaction(receipt.hash); // Store and return the tx.
     }
 
-    async _store(abi: string, bytecode: string, source: string, address: string) {
+    private async _store(abi: string, bytecode: string, source: string, address: string) {
         try {
             return await this.prisma.contract.create({ data: { abi, bytecode, source, address } });
         }
@@ -74,7 +75,7 @@ export class ContractsService {
         }
     }
 
-    _parseABI(sc: any) {
+    private _parseABI(sc: any) {
         sc.abi = JSON.parse(sc.abi);
     }
 

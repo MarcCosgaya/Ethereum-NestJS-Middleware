@@ -6,6 +6,7 @@ import { TransactionsService } from './transactions.service';
 @Module({
   controllers: [TransactionsController],
   imports: [PrismaModule],
+  exports: [TransactionsService],
   providers: [TransactionsService]
 })
 export class TransactionsModule {}

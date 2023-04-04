@@ -3,7 +3,7 @@ import { ContractsService } from './contracts.service';
 import { DeployDto } from './dtos/deploy.dto';
 import { GetOneDto } from './dtos/get-one.dto';
 import { UpdateContractDto } from './dtos/update-contract.dto';
-import { UpdateFunctionDto } from './dtos/update-function.dto';
+import { UpdateFunctionBodyDto, UpdateFunctionParamDto } from './dtos/update-function.dto';
 import { ViewFunctionDto } from './dtos/view-function.dto';
 
 @Controller('contracts')
@@ -20,13 +20,14 @@ export class ContractsController {
         return this.contractsService.get(id, func, args);
     }
 
-    @Post(':id/call/:func') // Call update function in smart contract.
+    @Post(':id/call') // Call update function in smart contract.
     // id: ID of smart contract.
-    // func: Function name in smart contract.
+    // body.func: Function name in smart contract.
+    // body.args: List of arguments of the function.
     // Returns tx information.
-    updateFunction(@Param() queryParams: UpdateFunctionDto, @Query() params: any) {
-        const { id, func } = queryParams;
-        const { args } = params;
+    updateFunction(@Body() body: UpdateFunctionBodyDto, @Param() queryParams: UpdateFunctionParamDto) {
+        const { id } = queryParams;
+        const { func, args } = body;
         return this.contractsService.set(id, func, args);
     }
 

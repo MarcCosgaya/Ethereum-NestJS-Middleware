@@ -6,7 +6,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class TransactionsService {
     constructor(private prisma: PrismaService) {}
 
-    async _store(from: string, to: string, quantity: bigint, hash: string, blockHeight: number, gasUsed: bigint, gasPrice: bigint, gasLimit: bigint) {
+    private async _store(from: string, to: string, quantity: bigint, hash: string, blockHeight: number, gasUsed: bigint, gasPrice: bigint, gasLimit: bigint) {
         try {
             return await this.prisma.transaction.create({ data: {
                 from,
@@ -36,6 +36,7 @@ export class TransactionsService {
         const storedTransaction = await this._store(from, to, value, hash, blockNumber, gasUsed, gasPrice, gasLimit);
 
         this._parseBigInts(storedTransaction);
+        await this._checkSmartContract(storedTransaction);
         return storedTransaction;
     }
 
@@ -50,27 +51,35 @@ export class TransactionsService {
         const storedTransaction = await this._store(from, to, value, hash, blockNumber, gasUsed, gasPrice, gasLimit);
 
         this._parseBigInts(storedTransaction);
+        await this._checkSmartContract(storedTransaction);
         return storedTransaction;
     }
 
-    _parseBigInts(tx: any) { // Parse BigInts of a stored tx into strings because JSON.stringify still doesn't work with BigInts :(
+    private _parseBigInts(tx: any) { // Parse BigInts of a stored tx into strings because JSON.stringify still doesn't work with BigInts :(
         tx.quantity = tx.quantity.toString();
         tx.gasUsed = tx.gasUsed.toString();
         tx.gasPrice = tx.gasPrice.toString();
         tx.gasLimit = tx.gasLimit.toString();
     }
 
+    private async _checkSmartContract(tx: any) { // Returns whether the tx is done to a smart contract address.
+        const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
+        tx.smartContract = (await provider.getCode(tx.to)) !== '0x';
+    }
+
     async getAll() {
-        const transactions = await this.prisma.transaction.findMany();
-        transactions.forEach(this._parseBigInts);
-        return transactions;
+        const txs = await this.prisma.transaction.findMany();
+        txs.forEach(this._parseBigInts);
+        for (const tx of txs) await this._checkSmartContract(tx);
+        return txs;
     }
 
     async getOne(txHash: string) {
-        const transaction = await this.prisma.transaction.findUniqueOrThrow({ where: { hash: txHash } })
+        const tx = await this.prisma.transaction.findUniqueOrThrow({ where: { hash: txHash } })
             .catch(() => { throw new NotFoundException });
-        this._parseBigInts(transaction);
-        return transaction;
+        this._parseBigInts(tx);
+        await this._checkSmartContract(tx)
+        return tx;
     }
 
     async getBalance(addr: string) {
