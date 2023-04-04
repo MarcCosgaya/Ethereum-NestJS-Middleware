@@ -3,6 +3,7 @@ import { TransactionsService } from './transactions.service';
 import { SendDto } from './dtos/send.dto';
 import { UpdateTransactionDto } from './dtos/update-transaction.dto';
 import { GetOneDto } from './dtos/get-one.dto';
+import { GetBalanceDto } from './dtos/get-balance.dto';
 
 @Controller('transactions')
 export class TransactionsController {
@@ -36,5 +37,12 @@ export class TransactionsController {
     updateTransaction(@Body() body: UpdateTransactionDto) {
         const { hash } = body;
         return this.transactionsService.updateTransaction(hash);
+    }
+
+    @Get('balance/:addr') // Get balance (in ethers) of an address.
+    // addr: Wallet address.
+    getBalance(@Param() queryParams: GetBalanceDto) {
+        const { addr } = queryParams;
+        return this.transactionsService.getBalance(addr);
     }
 }

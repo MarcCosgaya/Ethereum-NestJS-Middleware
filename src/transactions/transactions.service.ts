@@ -72,4 +72,9 @@ export class TransactionsService {
         this._parseBigInts(transaction);
         return transaction;
     }
+
+    async getBalance(addr: string) {
+        const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
+        return ethers.formatEther(await provider.getBalance(addr));
+    }
 }
