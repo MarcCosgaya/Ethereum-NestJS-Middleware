@@ -19,11 +19,19 @@ export class TransactionsService {
         }});
     }
     
-    async send(to: string, q: number) {
+    async send(to: string, q: number, gasSettings: any) {
+        gasSettings = gasSettings || {};
+        const { gasLimit: gasLimitSetting, gasPrice: gasPriceSetting } = gasSettings;
+
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
         const signer = new ethers.Wallet(process.env.PKEY, provider);
 
-        const transactionResponse = await signer.sendTransaction({ to, value: ethers.parseEther(q.toString()) })
+        const transactionResponse = await signer.sendTransaction({
+            to,
+            value: ethers.parseEther(q.toString()),
+            gasLimit: gasLimitSetting,
+            gasPrice: gasPriceSetting
+        })
         const transactionReceipt = await provider.getTransactionReceipt(transactionResponse.hash);
 
         const { value, gasLimit } = transactionResponse;

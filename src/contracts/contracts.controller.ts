@@ -24,22 +24,24 @@ export class ContractsController {
     // id: ID of smart contract.
     // body.func: Function name in smart contract.
     // body.args: List of arguments of the function.
+    // body.gasSettings (optional): Gas settings (gasPrice & gasLimit) for the tx.
     // Returns tx information.
     updateFunction(@Body() body: UpdateFunctionBodyDto, @Param() queryParams: UpdateFunctionParamDto) {
         const { id } = queryParams;
-        const { func, args } = body;
-        return this.contractsService.set(id, func, args);
+        const { func, args, gasSettings } = body;
+        return this.contractsService.set(id, func, args, gasSettings);
     }
 
     @Post() // Deploy a new smart contract.
     // body.abi: JSON-formatted ABI of compiled smart contract.
     // body.bytecode: hex-formatted bytecode of compiled smart contract.
     // body.source: Minified source code of the smart contract.
+    // body.gasSettings (optional): Gas settings (gasPrice & gasLimit) for the tx.
     // Returns contract information.
     deploy(@Body() body: DeployDto) {
-        const { abi, bytecode, source } = body;
+        const { abi, bytecode, source, gasSettings } = body;
         // TODO: check if source code is minified
-        return this.contractsService.deploy(abi, bytecode, source)
+        return this.contractsService.deploy(abi, bytecode, source, gasSettings)
     }
 
     @Put() // Update contract in DB from already deployed contract.

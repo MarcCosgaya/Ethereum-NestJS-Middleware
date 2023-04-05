@@ -1,4 +1,6 @@
-import { IsString } from "class-validator"
+import { Type } from "class-transformer"
+import { IsOptional, IsString, ValidateNested } from "class-validator"
+import { GasSettingsDto } from "src/app/gas-settings.dto"
 
 export class DeployDto {
     @IsString()
@@ -9,4 +11,9 @@ export class DeployDto {
 
     @IsString()
     source: string
+
+    @IsOptional()
+    @Type(() => GasSettingsDto)
+    @ValidateNested()
+    gasSettings: GasSettingsDto
 }

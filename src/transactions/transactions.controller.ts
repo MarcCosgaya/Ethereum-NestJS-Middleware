@@ -12,10 +12,11 @@ export class TransactionsController {
     @Post() // Send ethers to address.
     // body.to: Address to send to.
     // body.quant: Quantity (in ethers).
+    // body.gasSettings (optional): Gas settings (gasPrice & gasLimit) for the tx.
     // Returns tx information.
     send(@Body() body: SendDto) {
-        const { to, quant } = body;
-        return this.transactionsService.send(to, quant);
+        const { to, quant, gasSettings } = body;
+        return this.transactionsService.send(to, quant, gasSettings);
     }
 
     @Get() // Get list of all cached txs.

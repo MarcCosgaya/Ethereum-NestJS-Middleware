@@ -16,13 +16,22 @@ export class ContractsService {
         return returnValue;
     }
 
-    async set(id: number, func: string, args: string[]) {
+    async set(id: number, func: string, args: string[], gasSettings: any) {
+        gasSettings = gasSettings || {};
+        const { gasLimit: gasLimitSetting, gasPrice: gasPriceSetting } = gasSettings;
+
         const storedContract = await this.getOne(id);
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
         const signer = new ethers.Wallet(process.env.PKEY, provider);
         const contract = new ethers.Contract(storedContract.address, storedContract.abi, signer);
 
-        var receipt = args && args.length ? await contract[func](...args) : await contract[func]();
+        var receipt = args && args.length ? await contract[func](...args, {
+            gasLimit: gasLimitSetting,
+            gasPrice: gasPriceSetting
+        }) : await contract[func]({
+            gasLimit: gasLimitSetting,
+            gasPrice: gasPriceSetting
+        });
         return this.transactionsService.updateTransaction(receipt.hash); // Store and return the tx.
     }
 
@@ -30,12 +39,18 @@ export class ContractsService {
         return await this.prisma.contract.create({ data: { abi, bytecode, source, address } });
     }
 
-    async deploy(abi: string, bytecode: string, source: string) {
+    async deploy(abi: string, bytecode: string, source: string, gasSettings: any) {
+        gasSettings = gasSettings || {};
+        const { gasLimit: gasLimitSetting, gasPrice: gasPriceSetting } = gasSettings;
+
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
         const signer = new ethers.Wallet(process.env.PKEY, provider);
         const factory = new ethers.ContractFactory(abi, bytecode, signer);
 
-        const contract = await factory.deploy();
+        const contract = await factory.deploy({
+            gasLimit: gasLimitSetting,
+            gasPrice: gasPriceSetting
+        });
         const addr = await contract.getAddress();
 
         return this._store(abi, bytecode, source, addr)
