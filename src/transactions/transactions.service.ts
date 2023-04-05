@@ -7,21 +7,16 @@ export class TransactionsService {
     constructor(private prisma: PrismaService) {}
 
     private async _store(from: string, to: string, quantity: bigint, hash: string, blockHeight: number, gasUsed: bigint, gasPrice: bigint, gasLimit: bigint) {
-        try {
-            return await this.prisma.transaction.create({ data: {
-                from,
-                to,
-                quantity,
-                hash,
-                blockHeight,
-                gasUsed,
-                gasPrice,
-                gasLimit
-            }});
-        }
-        catch (err) {
-            throw new ConflictException;
-        }
+        return await this.prisma.transaction.create({ data: {
+            from,
+            to,
+            quantity,
+            hash,
+            blockHeight,
+            gasUsed,
+            gasPrice,
+            gasLimit
+        }});
     }
     
     async send(to: string, q: number) {
@@ -75,8 +70,7 @@ export class TransactionsService {
     }
 
     async getOne(txHash: string) {
-        const tx = await this.prisma.transaction.findUniqueOrThrow({ where: { hash: txHash } })
-            .catch(() => { throw new NotFoundException });
+        const tx = await this.prisma.transaction.findUniqueOrThrow({ where: { hash: txHash } });
         this._parseBigInts(tx);
         await this._checkSmartContract(tx)
         return tx;

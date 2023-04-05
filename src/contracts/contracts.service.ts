@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, InternalServerErrorException, ServiceUnavailableException, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ethers } from "ethers";
 import { TransactionsService } from 'src/transactions/transactions.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -12,17 +12,7 @@ export class ContractsService {
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
         const contract = new ethers.Contract(storedContract.address, storedContract.abi, provider);
 
-        try {
-            var returnValue = args && args.length ? await contract[func](args) : await contract[func]();
-        }
-        catch (err) {
-            switch (err.code) {
-                case 'UNSUPPORTED_OPERATION': throw new ForbiddenException;
-                case 'ECONNREFUSED': throw new ServiceUnavailableException;
-                case 'INVALID_ARGUMENT': throw new BadRequestException;
-                default: throw new InternalServerErrorException;
-            }
-        }
+        var returnValue = args && args.length ? await contract[func](args) : await contract[func]();
         return returnValue;
     }
 
@@ -32,29 +22,12 @@ export class ContractsService {
         const signer = new ethers.Wallet(process.env.PKEY, provider);
         const contract = new ethers.Contract(storedContract.address, storedContract.abi, signer);
 
-        try {
-            var receipt = args && args.length ? await contract[func](...args) : await contract[func]();
-        }
-        catch (err) {
-            console.error(err)
-            switch (err.code) {
-                case 'UNSUPPORTED_OPERATION': throw new ForbiddenException;
-                case 'ECONNREFUSED': throw new ServiceUnavailableException;
-                case 'INVALID_ARGUMENT': throw new BadRequestException;
-                default: throw new InternalServerErrorException;
-            }
-        }
-
+        var receipt = args && args.length ? await contract[func](...args) : await contract[func]();
         return this.transactionsService.updateTransaction(receipt.hash); // Store and return the tx.
     }
 
     private async _store(abi: string, bytecode: string, source: string, address: string) {
-        try {
-            return await this.prisma.contract.create({ data: { abi, bytecode, source, address } });
-        }
-        catch (err) {
-            throw new ConflictException;
-        }
+        return await this.prisma.contract.create({ data: { abi, bytecode, source, address } });
     }
 
     async deploy(abi: string, bytecode: string, source: string) {
@@ -62,17 +35,10 @@ export class ContractsService {
         const signer = new ethers.Wallet(process.env.PKEY, provider);
         const factory = new ethers.ContractFactory(abi, bytecode, signer);
 
-        try {
-            const contract = await factory.deploy();
+        const contract = await factory.deploy();
+        const addr = await contract.getAddress();
 
-            const addr = await contract.getAddress();
-
-            return this._store(abi, bytecode, source, addr)
-        }
-        catch (err) {
-            console.log(err)
-            // TODO
-        }
+        return this._store(abi, bytecode, source, addr)
     }
 
     private _parseABI(sc: any) {
@@ -86,8 +52,7 @@ export class ContractsService {
     }
 
     async getOne(id: number) {
-        const contract = await this.prisma.contract.findUniqueOrThrow({ where: { id } })
-            .catch(() => { throw new NotFoundException });
+        const contract = await this.prisma.contract.findUniqueOrThrow({ where: { id } });
         this._parseABI(contract);
         return contract;
     }

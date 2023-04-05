@@ -1,4 +1,4 @@
-import { Controller, Get, Body, Post, Put, ConflictException, Param } from '@nestjs/common';
+import { Controller, Get, Body, Post, Put, Param } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { SendDto } from './dtos/send.dto';
 import { UpdateTransactionDto } from './dtos/update-transaction.dto';
