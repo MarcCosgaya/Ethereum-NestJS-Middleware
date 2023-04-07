@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ethers } from 'ethers';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -7,16 +7,29 @@ export class TransactionsService {
     constructor(private prisma: PrismaService) {}
 
     private async _store(from: string, to: string, quantity: bigint, hash: string, blockHeight: number, gasUsed: bigint, gasPrice: bigint, gasLimit: bigint) {
-        return await this.prisma.transaction.create({ data: {
-            from,
-            to,
-            quantity,
-            hash,
-            blockHeight,
-            gasUsed,
-            gasPrice,
-            gasLimit
-        }});
+        return await this.prisma.transaction.upsert({
+            where: { hash },
+            update: {
+                from,
+                to,
+                quantity,
+                hash,
+                blockHeight,
+                gasUsed,
+                gasPrice,
+                gasLimit
+            },
+            create: {
+                from,
+                to,
+                quantity,
+                hash,
+                blockHeight,
+                gasUsed,
+                gasPrice,
+                gasLimit
+            }
+        });
     }
     
     async send(to: string, q: number, gasSettings: any) {
@@ -26,43 +39,67 @@ export class TransactionsService {
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
         const signer = new ethers.Wallet(process.env.PKEY, provider);
 
-        const transactionResponse = await signer.sendTransaction({
+        const response = await signer.sendTransaction({
             to,
             value: ethers.parseEther(q.toString()),
             gasLimit: gasLimitSetting,
             gasPrice: gasPriceSetting
         })
-        const transactionReceipt = await provider.getTransactionReceipt(transactionResponse.hash);
+        const receipt = await provider.getTransactionReceipt(response.hash);
 
-        const { value, gasLimit } = transactionResponse;
-        const { from, hash, blockNumber, gasUsed, gasPrice } = transactionReceipt;
-        const storedTransaction = await this._store(from, to, value, hash, blockNumber, gasUsed, gasPrice, gasLimit);
+        const { from, value, hash, gasLimit } = response;
+        var storedTransaction: any;
+        if (receipt) {
+            const { blockNumber, gasUsed, gasPrice } = receipt;
+            storedTransaction = await this._store(from, to, value, hash, blockNumber, gasUsed, gasPrice, gasLimit);
+            storedTransaction.confirmations = await receipt.confirmations();
+        }
+        else {
+            storedTransaction = await this._store(from, to, value, hash, null, null, null, gasLimit);
+        }
 
-        this._parseBigInts(storedTransaction);
-        await this._checkSmartContract(storedTransaction);
-        return storedTransaction;
+        return await this._parseTx(storedTransaction);
     }
 
     async updateTransaction(hash: string) {
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
 
-        const transactionResponse = await provider.getTransaction(hash); // Somehow ethers still says it's a receipt :(
-        const transactionReceipt = await provider.getTransactionReceipt(hash);
+        const response = await provider.getTransaction(hash); // Somehow ethers still says it's a receipt :(
+        const receipt = await provider.getTransactionReceipt(hash);
 
-        const { value, gasLimit } = transactionResponse;
-        const { from, to, blockNumber, gasUsed, gasPrice } = transactionReceipt;
-        const storedTransaction = await this._store(from, to, value, hash, blockNumber, gasUsed, gasPrice, gasLimit);
+        const { from, to, value, gasLimit } = response;
+        var storedTransaction: any;
+        if (receipt) {
+            const { blockNumber, gasUsed, gasPrice } = receipt;
+            storedTransaction = await this._store(from, to, value, hash, blockNumber, gasUsed, gasPrice, gasLimit);
+            storedTransaction.confirmations = await receipt.confirmations();
+        }
+        else {
+            storedTransaction = await this._store(from, to, value, hash, null, null, null, gasLimit);
+        }
 
-        this._parseBigInts(storedTransaction);
-        await this._checkSmartContract(storedTransaction);
-        return storedTransaction;
+        return await this._parseTx(storedTransaction);
+    }
+
+    private async _parseTx(tx: any) {
+        this._parseBigInts(tx);
+        await this._checkSmartContract(tx);
+        await this._checkConfirmations(tx);
+        return tx;
     }
 
     private _parseBigInts(tx: any) { // Parse BigInts of a stored tx into strings because JSON.stringify still doesn't work with BigInts :(
         tx.quantity = tx.quantity.toString();
-        tx.gasUsed = tx.gasUsed.toString();
-        tx.gasPrice = tx.gasPrice.toString();
+        tx.gasUsed = tx.gasUsed?.toString();
+        tx.gasPrice = tx.gasPrice?.toString();
         tx.gasLimit = tx.gasLimit.toString();
+    }
+
+    private async _checkConfirmations(tx: any) {
+        const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
+        const receipt = await provider.getTransactionReceipt(tx.hash);
+
+        tx.confirmations = await receipt?.confirmations();
     }
 
     private async _checkSmartContract(tx: any) { // Returns whether the tx is done to a smart contract address.
@@ -72,15 +109,13 @@ export class TransactionsService {
 
     async getAll() {
         const txs = await this.prisma.transaction.findMany();
-        txs.forEach(this._parseBigInts);
-        for (const tx of txs) await this._checkSmartContract(tx);
+        for (const tx of txs) await this._parseTx(tx);
         return txs;
     }
 
     async getOne(txHash: string) {
         const tx = await this.prisma.transaction.findUniqueOrThrow({ where: { hash: txHash } });
-        this._parseBigInts(tx);
-        await this._checkSmartContract(tx)
+        await this._parseTx(tx)
         return tx;
     }
 

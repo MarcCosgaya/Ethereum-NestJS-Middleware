@@ -28,8 +28,8 @@ model transaction {
   to String
   quantity BigInt
   hash String @unique
-  blockHeight Int
-  gasUsed BigInt
-  gasPrice BigInt
+  blockHeight Int?
+  gasUsed BigInt?
+  gasPrice BigInt?
   gasLimit BigInt
 }
