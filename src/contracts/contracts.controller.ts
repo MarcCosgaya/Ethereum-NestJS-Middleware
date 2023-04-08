@@ -25,11 +25,12 @@ export class ContractsController {
     // body.func: Function name in smart contract.
     // body.args: List of arguments of the function.
     // body.gasSettings (optional): Gas settings (gasPrice & gasLimit) for the tx.
+    // body.quant (optional): Send ethers if payable.
     // Returns tx information.
     updateFunction(@Body() body: UpdateFunctionBodyDto, @Param() queryParams: UpdateFunctionParamDto) {
         const { id } = queryParams;
-        const { func, args, gasSettings } = body;
-        return this.contractsService.set(id, func, args, gasSettings);
+        const { func, args, gasSettings, quant } = body;
+        return this.contractsService.set(id, func, args, gasSettings, quant);
     }
 
     @Post() // Deploy a new smart contract.

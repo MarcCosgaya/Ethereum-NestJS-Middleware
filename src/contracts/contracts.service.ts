@@ -16,7 +16,7 @@ export class ContractsService {
         return returnValue;
     }
 
-    async set(id: number, func: string, args: string[], gasSettings: any) {
+    async set(id: number, func: string, args: string[], gasSettings: any, q: number) {
         gasSettings = gasSettings || {};
         const { gasLimit: gasLimitSetting, gasPrice: gasPriceSetting } = gasSettings;
 
@@ -27,10 +27,12 @@ export class ContractsService {
 
         var receipt = args && args.length ? await contract[func](...args, {
             gasLimit: gasLimitSetting,
-            gasPrice: gasPriceSetting
+            gasPrice: gasPriceSetting,
+            value: q ? ethers.parseEther(q.toString()) : undefined
         }) : await contract[func]({
             gasLimit: gasLimitSetting,
-            gasPrice: gasPriceSetting
+            gasPrice: gasPriceSetting,
+            value: q ? ethers.parseEther(q.toString()): undefined
         });
         return this.transactionsService.updateTransaction(receipt.hash); // Store and return the tx.
     }
