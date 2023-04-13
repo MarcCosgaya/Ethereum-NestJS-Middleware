@@ -46,4 +46,14 @@ export class TransactionsController {
         const { addr } = queryParams;
         return this.transactionsService.getBalance(addr);
     }
+
+    @Post('sign') // Sign tx.
+    // body.to: Address to send to.
+    // body.quant: Quantity (in ethers).
+    // body.gasSettings (optional): Gas settings (gasPrice & gasLimit) for the tx.
+    // Returns tx information.
+    sign(@Body() body: SendDto) {
+        const { to, quant, gasSettings } = body;
+        return this.transactionsService.sign(to, quant, gasSettings);
+    }
 }

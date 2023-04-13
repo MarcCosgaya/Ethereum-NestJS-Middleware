@@ -39,12 +39,15 @@ export class TransactionsService {
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
         const signer = new ethers.Wallet(process.env.PKEY, provider);
 
-        const response = await signer.sendTransaction({
+        const request = {
             to,
             value: ethers.parseEther(q.toString()),
             gasLimit: gasLimitSetting,
-            gasPrice: gasPriceSetting
-        })
+            gasPrice: gasPriceSetting,
+            chainId: process.env.CHAIN_ID
+        };
+
+        const response = await signer.sendTransaction(request) // Somehow ethers still says it's a receipt :(
         const receipt = await provider.getTransactionReceipt(response.hash);
 
         const { from, value, hash, gasLimit } = response;
@@ -122,5 +125,38 @@ export class TransactionsService {
     async getBalance(addr: string) {
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
         return ethers.formatEther(await provider.getBalance(addr));
+    }
+
+    async sign(to: string, q: number, gasSettings: any) {
+        gasSettings = gasSettings || {};
+        const { gasLimit: gasLimitSetting, gasPrice: gasPriceSetting } = gasSettings;
+
+        const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
+        const signer = new ethers.Wallet(process.env.PKEY, provider);
+
+        const request = {
+            to,
+            value: ethers.parseEther(q.toString()),
+            gasLimit: gasLimitSetting,
+            gasPrice: gasPriceSetting,
+            chainId: process.env.CHAIN_ID,
+        };
+
+        const signedTx = await signer.signTransaction(await signer.populateTransaction(request))
+        const response = await provider.broadcastTransaction(signedTx); // Somehow ethers still says it's a receipt :(
+        const receipt = await provider.getTransactionReceipt(response.hash);
+
+        const { from, value, hash, gasLimit } = response;
+        var storedTransaction: any;
+        if (receipt) {
+            const { blockNumber, gasUsed, gasPrice } = receipt;
+            storedTransaction = await this._store(from, to, value, hash, blockNumber, gasUsed, gasPrice, gasLimit);
+            storedTransaction.confirmations = await receipt.confirmations();
+        }
+        else {
+            storedTransaction = await this._store(from, to, value, hash, null, null, null, gasLimit);
+        }
+
+        return await this._parseTx(storedTransaction);
     }
 }
