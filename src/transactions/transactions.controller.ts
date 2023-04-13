@@ -1,6 +1,6 @@
-import { Controller, Get, Body, Post, Put, Param } from '@nestjs/common';
+import { Controller, Get, Body, Post, Put, Param, BadRequestException } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
-import { SendDto } from './dtos/send.dto';
+import { SendDto, SendNewDto } from './dtos/send.dto';
 import { UpdateTransactionDto } from './dtos/update-transaction.dto';
 import { GetOneDto } from './dtos/get-one.dto';
 import { GetBalanceDto } from './dtos/get-balance.dto';
@@ -10,13 +10,24 @@ export class TransactionsController {
     constructor(private transactionsService: TransactionsService) {}
 
     @Post() // Send ethers to address.
-    // body.to: Address to send to.
-    // body.quant: Quantity (in ethers).
-    // body.gasSettings (optional): Gas settings (gasPrice & gasLimit) for the tx.
+    // Either
+        // body.new.to: Address to send to.
+        // body.new.quant: Quantity (in ethers).
+        // body.new.gasSettings (optional): Gas settings (gasPrice & gasLimit) for the tx.
+    // Or
+        // body.raw.tx: Raw tx in hex format.
     // Returns tx information.
     send(@Body() body: SendDto) {
-        const { to, quant, gasSettings } = body;
-        return this.transactionsService.send(to, quant, gasSettings);
+        if (body.new && body.raw) throw new BadRequestException('Can\'t have both {"new", "raw"} in body')
+        else if (body.new) {
+            const { to, quant } = body.new;
+            return this.transactionsService.send(to, quant, body.new.gasSettings);
+        }
+        else if (body.raw) {
+            const { tx } = body.raw;
+            return this.transactionsService.sendSigned(tx);
+        }
+        else throw new BadRequestException('Missing at least one of {"new", "raw"} in body');
     }
 
     @Get() // Get list of all cached txs.
@@ -51,8 +62,8 @@ export class TransactionsController {
     // body.to: Address to send to.
     // body.quant: Quantity (in ethers).
     // body.gasSettings (optional): Gas settings (gasPrice & gasLimit) for the tx.
-    // Returns tx information.
-    sign(@Body() body: SendDto) {
+    // Returns raw tx in hex format.
+    sign(@Body() body: SendNewDto) {
         const { to, quant, gasSettings } = body;
         return this.transactionsService.sign(to, quant, gasSettings);
     }

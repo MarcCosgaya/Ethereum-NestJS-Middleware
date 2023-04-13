@@ -8,13 +8,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     console.log(exception) // debug
 
-    if (exception instanceof HttpException) {
+    if (exception instanceof HttpException) { // Resend if already an HTTP exception.
       response.status(exception.getStatus());
       const { message } = exception.getResponse() as any;
       response.json({ message: Array.isArray(message) ? message[0] : message })
     }
     else {
       switch (exception.code) {
+        case 'UNKNOWN_ERROR':
+          if (exception.error.message.includes('correct nonce'))
+            response.status(412);
+          break;
         case 'INVALID_ARGUMENT':
         case 'MISSING_ARGUMENT':
         case 'UNEXPECTED_ARGUMENT':

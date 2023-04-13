@@ -142,11 +142,16 @@ export class TransactionsService {
             chainId: process.env.CHAIN_ID,
         };
 
-        const signedTx = await signer.signTransaction(await signer.populateTransaction(request))
+        return signer.signTransaction(await signer.populateTransaction(request))
+    }
+
+    async sendSigned(signedTx: string) {
+        const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
+
         const response = await provider.broadcastTransaction(signedTx); // Somehow ethers still says it's a receipt :(
         const receipt = await provider.getTransactionReceipt(response.hash);
 
-        const { from, value, hash, gasLimit } = response;
+        const { from, to, value, hash, gasLimit } = response;
         var storedTransaction: any;
         if (receipt) {
             const { blockNumber, gasUsed, gasPrice } = receipt;

@@ -2,7 +2,7 @@ import { Type } from "class-transformer"
 import { IsNumber, IsOptional, IsString, ValidateNested } from "class-validator"
 import { GasSettingsDto } from "../../app/gas-settings.dto"
 
-export class SendDto {
+export class SendNewDto {
     @IsString()
     to: string
 
@@ -14,4 +14,21 @@ export class SendDto {
     @Type(() => GasSettingsDto)
     @ValidateNested()
     gasSettings: GasSettingsDto
+}
+
+export class SendRawDto {
+    @IsString()
+    tx: string
+}
+
+export class SendDto {
+    @IsOptional()
+    @Type(() => SendNewDto)
+    @ValidateNested()
+    new: SendNewDto
+
+    @IsOptional()
+    @Type(() => SendRawDto)
+    @ValidateNested()
+    raw: SendRawDto
 }
