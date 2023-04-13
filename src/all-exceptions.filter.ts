@@ -15,10 +15,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
     else {
       switch (exception.code) {
-        case 'UNKNOWN_ERROR':
-        case 'INVALID_ARGUMENT': response.status(400); break; // Invalid arguments in Ethers.
-        case 'INSUFFICIENT_FUNDS': response.status(402); break; // Not enough funds aka "payment required" in Ethers.
-        case 'UNSUPPORTED_OPERATION': response.status(403); break; // Invalid funciton name in Ethers.
+        case 'INVALID_ARGUMENT':
+        case 'MISSING_ARGUMENT':
+        case 'UNEXPECTED_ARGUMENT':
+        case 'VALUE_MISMATCH': response.status(400); break;
+        case 'INSUFFICIENT_FUNDS':
+        case 'REPLACEMENT_UNDERPRICED': response.status(402); break;
+        case 'UNCONFIGURED_NAME': response.status(404); break;
+        case 'TIMEOUT': response.status(408); break;
+        case 'NONCE_EXPIRED':
+        case 'TRANSACTION_REPLACED': response.status(409); break;
+        case 'CALL_EXCEPTION': response.status(412); break;
+        case 'ACTION_REJECTED': response.status(424); break;
         case 'P2025': response.status(404); break; // Not found in Prisma.
         case 'P2002': response.status(409); break; // Unique constraint fail in Prisma.
         case 'ECONNREFUSED': response.status(503); break; // No access to BC in Ethers.
