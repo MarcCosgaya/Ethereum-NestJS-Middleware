@@ -42,11 +42,11 @@ export class ContractsController {
     // body.compilerVersion: Compiler version used to compile the contract. E.g. "0.5.14". Defaults to "latest".
     // Returns contract information.
     deploy(@Body() body: DeployDto) {
-        const { abi, bytecode, source, gasSettings, fileName, compilerVersion = 'latest' } = body;
-        return this.contractsService.deploy(abi, bytecode, source, gasSettings, fileName, compilerVersion)
+        const { abi, bytecode, source, gasSettings } = body;
+        return this.contractsService.deploy(abi, bytecode, source, gasSettings);
     }
 
-    @Put() // Update contract in DB from already deployed contract.
+    @Put() // Verify and update contract in DB from already deployed contract.
     // body.tx: Hash of the transaction that deployed the contract.
     // body.abi: JSON-formatted ABI of compiled smart contract.
     // body.source: Minified source code of the smart contract.
@@ -69,9 +69,5 @@ export class ContractsController {
     // Returns a single contract.
     getOne(@Param() queryParams: GetOneDto) {
         return this.contractsService.getOne(queryParams.id);
-    }
-
-    validate() {
-        // TODO: validate source code with etherscan or similar
     }
 }

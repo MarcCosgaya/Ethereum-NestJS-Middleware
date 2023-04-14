@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { Contract, ethers } from "ethers";
 import { TransactionsService } from 'src/transactions/transactions.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -49,7 +49,7 @@ export class ContractsService {
         return this.transactionsService.updateTransaction(receipt.hash); // Store and return the tx.
     }
 
-    private async _store(abi: string, bytecode: string, source: string, address: string, tx: string) {
+    private async _store(abi: string, bytecode: string, source: string, address: string, tx: string, verified: boolean) {
         return await this.prisma.contract.upsert({
             where: { address },
             update: {
@@ -57,14 +57,16 @@ export class ContractsService {
                 bytecode,
                 source,
                 address,
-                tx
+                tx,
+                verified
             },
             create: {
                 abi,
                 bytecode,
                 source,
                 address,
-                tx
+                tx,
+                verified
             }
         });
     }
@@ -79,7 +81,7 @@ export class ContractsService {
         return found ? 'v'+found.longVersion : 'latest'; // If version is not found, use latest.
     }
 
-    private async _verify(bytecode: string, source: string, version: string, fileName: string) {
+    private async _verify(bytecode: string, source: string, compilerVersion: string, fileName: string) {
         if (bytecode === '0x') return false;
 
         const sources = {};
@@ -98,7 +100,7 @@ export class ContractsService {
                 },
             },
         };
-        const resolvedVersion = this._resolveVersion(version);
+        const resolvedVersion = this._resolveVersion(compilerVersion);
 
         console.log('Downloading '+resolvedVersion);
         const promisifiedLoadRemoteVersion = promisify(solc.loadRemoteVersion);
@@ -111,11 +113,7 @@ export class ContractsService {
         return compiledBytecode === bytecode;
     }
 
-    async deploy(abi: string, bytecode: string, source: string, gasSettings: any, fileName: string, compilerVersion: string) {
-        console.log('Verifying new contract');
-        const verified = await this._verify(bytecode, source, compilerVersion, fileName);
-        if (!verified) throw new BadRequestException('Source code doesn\'t match');
-
+    async deploy(abi: string, bytecode: string, source: string, gasSettings: any) {
         gasSettings = gasSettings || {};
         const {
             gasLimit: gasLimitSetting,
@@ -137,7 +135,7 @@ export class ContractsService {
         const addr = await contract.getAddress();
         const tx = contract.deploymentTransaction().hash;
 
-        const sc = await this._store(abi, bytecode, source, addr, tx)
+        const sc = await this._store(abi, bytecode, source, addr, tx, false); // Don't verify the first time.
         this._parseABI(sc);
 
         this.transactionsService.updateTransaction(tx);
@@ -160,16 +158,25 @@ export class ContractsService {
         return contract;
     }
 
+    async _getOneByTx(tx: string) {
+        const contract = await this.prisma.contract.findUniqueOrThrow({ where: { tx } });
+        this._parseABI(contract);
+        return contract;
+    }
+
     async updateContract(tx: string, abi: string, source: string, fileName: string, compilerVersion: string) {
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
-        const addr = (await provider.getTransactionReceipt(tx)).contractAddress;
+        const addr = (await provider.getTransactionReceipt(tx))?.contractAddress;
+        if (!addr) throw new ConflictException('Contract hasn\'t been deployed yet');
         const bytecode = (await provider.getTransaction(tx)).data.slice(2);
 
-        console.log('Verifying '+addr);
-        const verified = await this._verify(bytecode, source, compilerVersion, fileName);
-        if (!verified) throw new BadRequestException('Source code doesn\'t match');
+        if (!(await this._getOneByTx(tx)).verified) {
+            console.log('Verifying '+addr);
+            const verified = await this._verify(bytecode, source, compilerVersion, fileName);
+            if (!verified) throw new BadRequestException('Source code doesn\'t match');
+        }
 
-        const sc = await this._store(abi, bytecode, source, addr, tx);
+        const sc = await this._store(abi, bytecode, source, addr, tx, true); // Always verify when updating.
         this._parseABI(sc);
 
         this.transactionsService.updateTransaction(tx);

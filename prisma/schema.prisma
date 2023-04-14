@@ -18,9 +18,10 @@ model contract {
   id Int @id @default(autoincrement())
   abi String
   bytecode String
-  source String
+  source String?
   address String @unique
   tx String @unique
+  verified Boolean
 }
 
 model transaction {

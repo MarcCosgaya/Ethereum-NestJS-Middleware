@@ -9,6 +9,7 @@ export class DeployDto {
     @IsString()
     bytecode: string
 
+    @IsOptional()
     @IsString()
     source: string
 
@@ -16,11 +17,4 @@ export class DeployDto {
     @Type(() => GasSettingsDto)
     @ValidateNested()
     gasSettings: GasSettingsDto
-
-    @IsString()
-    fileName: string
-
-    @IsOptional()
-    @IsString()
-    compilerVersion: string
 }

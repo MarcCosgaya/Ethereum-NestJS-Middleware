@@ -43,6 +43,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         case 'ACTION_REJECTED': response.status(424); break;
         case 'CALL_EXCEPTION': response.status(428); break;
         case 'P2002': response.status(409); break;
+        case 'EAI_AGAIN': // Could not download Solidity compiler.
         case 'ECONNREFUSED':
         case 'NETWORK_ERROR':
         case 'SERVER_ERROR': response.status(504); break;
