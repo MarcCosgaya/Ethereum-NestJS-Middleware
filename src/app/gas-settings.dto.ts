@@ -9,4 +9,12 @@ export class GasSettingsDto {
     @Type(() => BigInt)
     @IsInt()
     gasPrice: BigInt
+
+    @Type(() => BigInt)
+    @IsInt()
+    maxFeePerGas: BigInt
+
+    @Type(() => BigInt)
+    @IsInt()
+    maxPriorityFeePerGas: BigInt
 }

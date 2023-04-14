@@ -1,8 +1,8 @@
 ### Get storage value
-GET http://localhost:3000/contracts/24/call/get
+GET http://localhost:3000/contracts/26/call/get
 
 ### Set storage value
-POST http://localhost:3000/contracts/20/call
+POST http://localhost:3000/contracts/26/call
 content-type: application/json
 
 {
@@ -11,7 +11,7 @@ content-type: application/json
 }
 
 ### Pay
-POST http://localhost:3000/contracts/20/call
+POST http://localhost:3000/contracts/26/call
 content-type: application/json
 
 {
@@ -34,14 +34,14 @@ content-type: application/json
 GET http://localhost:3000/contracts
 
 ### Get one SC
-GET http://localhost:3000/contracts/4
+GET http://localhost:3000/contracts/26
 
 ### Update SC
 PUT http://localhost:3000/contracts
 content-type: application/json
 
 {
-    "tx": "0xb6edf1f70446d488740b578221df8cd58128fc798941f78a16c67cb715849245",
+    "tx": "0x302d42ff9bed3cb8d554a8993ab53b35d0d7ba685eeddf56ae0bb325046aaaf7",
     "abi": "[{\"constant\":false,\"inputs\":[],\"name\":\"get\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\",\"stateMutability\":\"nonpayable\"},{\"constant\":false,\"inputs\":[],\"name\":\"set\",\"outputs\":[],\"payable\":false,\"type\":\"function\",\"stateMutability\":\"nonpayable\"}]",
     "source": "pragma solidity^0.4.8;contract SimpleStorage{uint x;function set(){x=333}function get()returns(uint){return x}}"
 }
@@ -69,10 +69,10 @@ Content-type: application/json
 GET http://localhost:3000/transactions
 
 ### Get one tx
-GET http://localhost:3000/transactions/0x749c11ff92075083bad4ba14a7e93745496fae9711a88f72fa1599d379f0b918
+GET http://localhost:3000/transactions/0x831df208aeb870a71a48e1a9e7d7d5aff4b7e7c7ee625de48ca0063fe37f297c
 
 ### Get balance
-GET http://localhost:3000/transactions/balance/0xe64e40EF4def381F28eC7a08296DD7df521f8ea8
+GET http://localhost:3000/transactions/balance/0x831df208aeb870a71a48e1a9e7d7d5aff4b7e7c7ee625de48ca0063fe37f297c
 
 ### Sign tx
 POST http://localhost:3000/transactions/sign
@@ -89,6 +89,6 @@ content-type: application/json
 
 {
     "raw": {
-        "tx": "0x02f87382053921843b9aca00843b9aca0e8252089454c379a6db831e890c9236b6339b505807dc705c872386f26fc1000080c001a01c3e5831eb374d8a7c4a20e35e729912883754ae429189e5b32968de93650ad0a04b0253173a9a30bf1e619a3c6b2216f7f430c2af77c655bb8353178bf9a65bba"
+        "tx": "0x02f87382053927843b9aca00843b9aca0e82523089454c379a6db831e890c9236b6339b505807dc705c872386f26fc1000080c001a0a9798c6fa2d372a88608fd3d04f99e39ea14332f33069111fc318c9ea366bda6a029b732f9f04c77c4bdf85929fa0a8194940dfbdb41a861cf7f43f4a925ed6cb6"
     }
 }

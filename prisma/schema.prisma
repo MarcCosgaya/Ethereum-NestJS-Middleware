@@ -20,6 +20,7 @@ model contract {
   bytecode String
   source String
   address String @unique
+  tx String @unique
 }
 
 model transaction {

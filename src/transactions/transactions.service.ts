@@ -11,7 +11,7 @@ export class TransactionsService {
             where: { hash },
             update: {
                 from,
-                to,
+                to: to || ethers.ZeroAddress,
                 quantity,
                 hash,
                 blockHeight,
@@ -21,7 +21,7 @@ export class TransactionsService {
             },
             create: {
                 from,
-                to,
+                to: to || ethers.ZeroAddress,
                 quantity,
                 hash,
                 blockHeight,
@@ -34,9 +34,14 @@ export class TransactionsService {
     
     async send(to: string, q: number, gasSettings: any) {
         gasSettings = gasSettings || {};
-        const { gasLimit: gasLimitSetting, gasPrice: gasPriceSetting } = gasSettings;
+        const {
+            gasLimit: gasLimitSetting,
+            gasPrice: gasPriceSetting,
+            maxFeePerGas: maxFeePerGasSetting,
+            maxPriorityFeePerGas: maxPriorityFeePerGasSetting
+        } = gasSettings;
 
-        const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
+        const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
         const signer = new ethers.Wallet(process.env.PKEY, provider);
 
         const request = {
@@ -44,7 +49,8 @@ export class TransactionsService {
             value: ethers.parseEther(q.toString()),
             gasLimit: gasLimitSetting,
             gasPrice: gasPriceSetting,
-            chainId: process.env.CHAIN_ID
+            maxFeePerGas: maxFeePerGasSetting,
+            maxPriorityFeePerGas: maxPriorityFeePerGasSetting
         };
 
         const response = await signer.sendTransaction(request) // Somehow ethers still says it's a receipt :(
@@ -65,7 +71,7 @@ export class TransactionsService {
     }
 
     async updateTransaction(hash: string) {
-        const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
+        const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
 
         const response = await provider.getTransaction(hash); // Somehow ethers still says it's a receipt :(
         const receipt = await provider.getTransactionReceipt(hash);
@@ -99,14 +105,14 @@ export class TransactionsService {
     }
 
     private async _checkConfirmations(tx: any) {
-        const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
+        const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
         const receipt = await provider.getTransactionReceipt(tx.hash);
 
         tx.confirmations = await receipt?.confirmations();
     }
 
     private async _checkSmartContract(tx: any) { // Returns whether the tx is done to a smart contract address.
-        const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
+        const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
         tx.smartContract = (await provider.getCode(tx.to)) !== '0x';
     }
 
@@ -123,15 +129,20 @@ export class TransactionsService {
     }
 
     async getBalance(addr: string) {
-        const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
+        const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
         return ethers.formatEther(await provider.getBalance(addr));
     }
 
     async sign(to: string, q: number, gasSettings: any) {
         gasSettings = gasSettings || {};
-        const { gasLimit: gasLimitSetting, gasPrice: gasPriceSetting } = gasSettings;
+        const {
+            gasLimit: gasLimitSetting,
+            gasPrice: gasPriceSetting,
+            maxFeePerGas: maxFeePerGasSetting,
+            maxPriorityFeePerGas: maxPriorityFeePerGasSetting
+        } = gasSettings;
 
-        const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
+        const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
         const signer = new ethers.Wallet(process.env.PKEY, provider);
 
         const request = {
@@ -139,14 +150,15 @@ export class TransactionsService {
             value: ethers.parseEther(q.toString()),
             gasLimit: gasLimitSetting,
             gasPrice: gasPriceSetting,
-            chainId: process.env.CHAIN_ID,
+            maxFeePerGas: maxFeePerGasSetting,
+            maxPriorityFeePerGas: maxPriorityFeePerGasSetting
         };
 
         return signer.signTransaction(await signer.populateTransaction(request))
     }
 
     async sendSigned(signedTx: string) {
-        const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER);
+        const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
 
         const response = await provider.broadcastTransaction(signedTx); // Somehow ethers still says it's a receipt :(
         const receipt = await provider.getTransactionReceipt(response.hash);
