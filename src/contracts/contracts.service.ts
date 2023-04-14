@@ -113,7 +113,11 @@ export class ContractsService {
         return compiledBytecode === bytecode;
     }
 
-    async deploy(abi: string, bytecode: string, source: string, gasSettings: any) {
+    async deploy(abi: string, bytecode: string, source: string, gasSettings: any, fileName: string, compilerVersion: string) {
+        let verified = false;
+        if (source && fileName && compilerVersion) // If possible, try to verify.
+            verified = await this._verify(bytecode, source, compilerVersion, fileName);
+
         gasSettings = gasSettings || {};
         const {
             gasLimit: gasLimitSetting,
@@ -135,7 +139,7 @@ export class ContractsService {
         const addr = await contract.getAddress();
         const tx = contract.deploymentTransaction().hash;
 
-        const sc = await this._store(abi, bytecode, source, addr, tx, false); // Don't verify the first time.
+        const sc = await this._store(abi, bytecode, source, addr, tx, verified);
         this._parseABI(sc);
 
         this.transactionsService.updateTransaction(tx);

@@ -14,6 +14,14 @@ export class DeployDto {
     source: string
 
     @IsOptional()
+    @IsString()
+    fileName: string
+
+    @IsOptional()
+    @IsString()
+    compilerVersion: string
+
+    @IsOptional()
     @Type(() => GasSettingsDto)
     @ValidateNested()
     gasSettings: GasSettingsDto

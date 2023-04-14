@@ -36,14 +36,14 @@ export class ContractsController {
     @Post() // Deploy a precompiled smart contract.
     // body.abi: JSON-formatted ABI of compiled smart contract.
     // body.bytecode: hex-formatted bytecode of compiled smart contract.
-    // body.source: Minified source code of the smart contract.
+    // body.source (optional): Minified source code of the smart contract.
     // body.gasSettings (optional): Gas settings (gasPrice & gasLimit) for the tx.
-    // body.fileName: File name used to compile the contract.
-    // body.compilerVersion: Compiler version used to compile the contract. E.g. "0.5.14". Defaults to "latest".
+    // body.fileName (optional): File name used to compile the contract.
+    // body.compilerVersion (optional): Compiler version used to compile the contract. E.g. "0.5.14". Defaults to "latest".
     // Returns contract information.
     deploy(@Body() body: DeployDto) {
-        const { abi, bytecode, source, gasSettings } = body;
-        return this.contractsService.deploy(abi, bytecode, source, gasSettings);
+        const { abi, bytecode, source, gasSettings, fileName, compilerVersion } = body;
+        return this.contractsService.deploy(abi, bytecode, source, gasSettings, fileName, compilerVersion);
     }
 
     @Put() // Verify and update contract in DB from already deployed contract.
