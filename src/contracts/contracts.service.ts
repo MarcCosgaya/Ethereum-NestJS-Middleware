@@ -1,7 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Contract, ethers } from "ethers";
 import { TransactionsService } from 'src/transactions/transactions.service';
 import { PrismaService } from '../prisma/prisma.service';
+const solc = require('solc');
+const fs = require('fs');
+import { promisify } from 'util';
 
 @Injectable()
 export class ContractsService {
@@ -66,7 +69,53 @@ export class ContractsService {
         });
     }
 
-    async deploy(abi: string, bytecode: string, source: string, gasSettings: any) {
+    private _resolveVersion(version: string) {
+        const data = fs.readFileSync('solidity-versions.json', {
+            encoding:'utf8',
+            flag:'r'
+        });
+        const dataJSON = JSON.parse(data);
+        const found = dataJSON.builds.find(v => v.version === version && !v.prerelease);
+        return found ? 'v'+found.longVersion : 'latest'; // If version is not found, use latest.
+    }
+
+    private async _verify(bytecode: string, source: string, version: string, fileName: string) {
+        if (bytecode === '0x') return false;
+
+        const sources = {};
+        sources[fileName] = { content: source };
+        const input = {
+            language: 'Solidity',
+            sources,
+            settings: {
+                optimizer: {
+                    enabled: process.env.COMPILER_OPTIMIZE === 'true'
+                },
+                outputSelection: {
+                    '*': {
+                        '*': ['*'],
+                    },
+                },
+            },
+        };
+        const resolvedVersion = this._resolveVersion(version);
+
+        console.log('Downloading '+resolvedVersion);
+        const promisifiedLoadRemoteVersion = promisify(solc.loadRemoteVersion);
+        const solc_specific = await promisifiedLoadRemoteVersion(resolvedVersion);
+        console.log('Downloaded  '+resolvedVersion);
+
+        const result = JSON.parse(solc_specific.compile(JSON.stringify(input)));
+        if (result.errors && result.errors.length > 0) throw new BadRequestException(result.errors[0].message);
+        const compiledBytecode = (Object.values(result.contracts[fileName])[0] as any).evm.bytecode.object;
+        return compiledBytecode === bytecode;
+    }
+
+    async deploy(abi: string, bytecode: string, source: string, gasSettings: any, fileName: string, compilerVersion: string) {
+        console.log('Verifying new contract');
+        const verified = await this._verify(bytecode, source, compilerVersion, fileName);
+        if (!verified) throw new BadRequestException('Source code doesn\'t match');
+
         gasSettings = gasSettings || {};
         const {
             gasLimit: gasLimitSetting,
@@ -111,10 +160,14 @@ export class ContractsService {
         return contract;
     }
 
-    async updateContract(tx: string, abi: string, source: string) {
+    async updateContract(tx: string, abi: string, source: string, fileName: string, compilerVersion: string) {
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
         const addr = (await provider.getTransactionReceipt(tx)).contractAddress;
         const bytecode = (await provider.getTransaction(tx)).data.slice(2);
+
+        console.log('Verifying '+addr);
+        const verified = await this._verify(bytecode, source, compilerVersion, fileName);
+        if (!verified) throw new BadRequestException('Source code doesn\'t match');
 
         const sc = await this._store(abi, bytecode, source, addr, tx);
         this._parseABI(sc);

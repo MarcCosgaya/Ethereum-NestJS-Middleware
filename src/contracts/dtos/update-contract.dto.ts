@@ -1,4 +1,4 @@
-import { IsString } from "class-validator"
+import { IsOptional, IsString } from "class-validator"
 
 export class UpdateContractDto {
     @IsString()
@@ -9,4 +9,11 @@ export class UpdateContractDto {
 
     @IsString()
     source: string
+
+    @IsString()
+    fileName: string
+
+    @IsOptional()
+    @IsString()
+    compilerVersion: string
 }

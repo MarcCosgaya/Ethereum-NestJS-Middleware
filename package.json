@@ -1,6 +1,6 @@
 {
   "name": "ethereum-nestjs-middleware",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "author": "",
   "private": true,
@@ -29,7 +29,8 @@
     "ethers": "^6.1.0",
     "prisma": "^4.11.0",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.2.0"
+    "rxjs": "^7.2.0",
+    "solc": "^0.8.19"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.0.0",

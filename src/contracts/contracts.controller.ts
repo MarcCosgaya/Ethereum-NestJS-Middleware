@@ -33,26 +33,29 @@ export class ContractsController {
         return this.contractsService.set(id, func, args, gasSettings, quant);
     }
 
-    @Post() // Deploy a new smart contract.
+    @Post() // Deploy a precompiled smart contract.
     // body.abi: JSON-formatted ABI of compiled smart contract.
     // body.bytecode: hex-formatted bytecode of compiled smart contract.
     // body.source: Minified source code of the smart contract.
     // body.gasSettings (optional): Gas settings (gasPrice & gasLimit) for the tx.
+    // body.fileName: File name used to compile the contract.
+    // body.compilerVersion: Compiler version used to compile the contract. E.g. "0.5.14". Defaults to "latest".
     // Returns contract information.
     deploy(@Body() body: DeployDto) {
-        const { abi, bytecode, source, gasSettings } = body;
-        // TODO: check if source code is minified
-        return this.contractsService.deploy(abi, bytecode, source, gasSettings)
+        const { abi, bytecode, source, gasSettings, fileName, compilerVersion = 'latest' } = body;
+        return this.contractsService.deploy(abi, bytecode, source, gasSettings, fileName, compilerVersion)
     }
 
     @Put() // Update contract in DB from already deployed contract.
     // body.tx: Hash of the transaction that deployed the contract.
     // body.abi: JSON-formatted ABI of compiled smart contract.
     // body.source: Minified source code of the smart contract.
+    // body.fileName: File name used to compile the contract.
+    // body.compilerVersion: Compiler version used to compile the contract. E.g. "0.5.14". Defaults to "latest".
     // Returns contract information.
     updateContract(@Body() body: UpdateContractDto) {
-        const { tx, abi, source } = body;
-        return this.contractsService.updateContract(tx, abi, source);
+        const { tx, abi, source, fileName, compilerVersion = 'latest' } = body;
+        return this.contractsService.updateContract(tx, abi, source, fileName, compilerVersion);
     }
 
     @Get() // Get list of all cached smart contracts.

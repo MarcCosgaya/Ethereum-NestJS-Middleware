@@ -1,9 +1,10 @@
 import { Type } from "class-transformer"
-import { IsNumber, IsOptional, IsString, ValidateNested } from "class-validator"
+import { IsEthereumAddress, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator"
 import { GasSettingsDto } from "../../app/gas-settings.dto"
 
 export class SendNewDto {
     @IsString()
+    @IsEthereumAddress()
     to: string
 
     @Type(() => Number)
