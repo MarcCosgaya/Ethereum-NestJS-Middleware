@@ -63,8 +63,8 @@ export class TransactionsController {
     // body.quant: Quantity (in ethers).
     // body.gasSettings (optional): Gas settings (gasPrice & gasLimit) for the tx.
     // Returns raw tx in hex format.
-    sign(@Body() body: SendNewDto) {
+    async sign(@Body() body: SendNewDto) {
         const { to, quant, gasSettings } = body;
-        return this.transactionsService.sign(to, quant, gasSettings);
+        return { bytecode: await this.transactionsService.sign(to, quant, gasSettings) };
     }
 }
