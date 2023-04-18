@@ -1,12 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app/app.module';
-import { AllExceptionsFilter } from './all-exceptions.filter';
+import { AllExceptionsFilter } from './app/all-exceptions.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  const swaggerOptions = {
+    operationsSorter: 'alpha',
+  };
   const config = new DocumentBuilder()
     .setTitle('Ethereum-NestJS-Middleware')
     .setDescription('NestJS API for interacting with the Ethereum blockchain.')
@@ -15,7 +18,7 @@ async function bootstrap() {
     .addTag('Contracts')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('api', app, document, { swaggerOptions });
 
   app.useGlobalPipes(new ValidationPipe({
     whitelist:true
