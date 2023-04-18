@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 const solc = require('solc');
 const fs = require('fs');
 import { promisify } from 'util';
-import { contract } from '@prisma/client';
+import { contract, transaction } from '@prisma/client';
 
 @Injectable()
 export class ContractsService {
@@ -30,7 +30,7 @@ export class ContractsService {
      * @param id Id of the smart contract
      * @returns Updating transaction
     **/
-    async set(id: number, func: string, args: string[], gasSettings: any, q: number): Promise<any> {
+    async set(id: number, func: string, args: string[], gasSettings: any, quant: number): Promise<transaction> {
         gasSettings = gasSettings || {};
         const {
             gasLimit: gasLimitSetting,
@@ -49,13 +49,13 @@ export class ContractsService {
             gasPrice: gasPriceSetting,
             maxFeePerGas: maxFeePerGasSetting,
             maxPriorityFeePerGas: maxPriorityFeePerGasSetting,
-            value: q ? ethers.parseEther(q.toString()) : undefined
+            value: quant ? ethers.parseEther(quant.toString()) : undefined
         }) : await contract[func]({
             gasLimit: gasLimitSetting,
             gasPrice: gasPriceSetting,
             maxFeePerGas: maxFeePerGasSetting,
             maxPriorityFeePerGas: maxPriorityFeePerGasSetting,
-            value: q ? ethers.parseEther(q.toString()): undefined
+            value: quant ? ethers.parseEther(quant.toString()) : undefined
         });
         return this.transactionsService.updateTransaction(receipt.hash); // Store and return the tx.
     }

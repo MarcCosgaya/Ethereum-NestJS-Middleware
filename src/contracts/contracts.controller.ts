@@ -5,69 +5,54 @@ import { GetOneDto } from './dtos/get-one.dto';
 import { UpdateContractDto } from './dtos/update-contract.dto';
 import { UpdateFunctionBodyDto, UpdateFunctionParamDto } from './dtos/update-function.dto';
 import { ViewFunctionDto } from './dtos/view-function.dto';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { contract, transaction } from '@prisma/client';
 
+@ApiTags('Contracts')
 @Controller('contracts')
 export class ContractsController {
     constructor(private contractsService: ContractsService) {}
 
-    @Get(':id/call/:func') // Call view function in smart contract.
-    // id: ID of smart contract.
-    // func: Function name in smart contract.
-    // Returns requested value.
-    viewFunction(@Param() queryParams: ViewFunctionDto, @Query() params: any) {
+    @ApiOperation({ summary: 'Call view function in smart contract.' })
+    @Get(':id/call/:func')
+    viewFunction(@Param() queryParams: ViewFunctionDto, @Query() params: any): Promise<string> {
         const { id, func } = queryParams;
         const { args } = params;
+
         return this.contractsService.get(id, func, args);
     }
 
-    @Post(':id/call') // Call update function in smart contract.
-    // id: ID of smart contract.
-    // body.func: Function name in smart contract.
-    // body.args: List of arguments of the function.
-    // body.gasSettings (optional): Gas settings (gasPrice & gasLimit) for the tx.
-    // body.quant (optional): Send ethers if payable.
-    // Returns tx information.
-    updateFunction(@Body() body: UpdateFunctionBodyDto, @Param() queryParams: UpdateFunctionParamDto) {
+    @ApiOperation({ summary: 'Call update function in smart contract.' })
+    @Post(':id/call')
+    updateFunction(@Body() body: UpdateFunctionBodyDto, @Param() queryParams: UpdateFunctionParamDto): Promise<transaction> {
         const { id } = queryParams;
         const { func, args, gasSettings, quant } = body;
         return this.contractsService.set(id, func, args, gasSettings, quant);
     }
 
-    @Post() // Deploy a precompiled smart contract.
-    // body.abi: JSON-formatted ABI of compiled smart contract.
-    // body.bytecode: hex-formatted bytecode of compiled smart contract.
-    // body.source (optional): Minified source code of the smart contract.
-    // body.gasSettings (optional): Gas settings (gasPrice & gasLimit) for the tx.
-    // body.fileName (optional): File name used to compile the contract.
-    // body.compilerVersion (optional): Compiler version used to compile the contract. E.g. "0.5.14". Defaults to "latest".
-    // Returns contract information.
-    deploy(@Body() body: DeployDto) {
+    @ApiOperation({ summary: 'Deploy a precompiled smart contract.' })
+    @Post()
+    deploy(@Body() body: DeployDto): Promise<contract> {
         const { abi, bytecode, source, gasSettings, fileName, compilerVersion } = body;
         return this.contractsService.deploy(abi, bytecode, source, gasSettings, fileName, compilerVersion);
     }
 
-    @Patch() // Verify and update contract in DB from already deployed contract.
-    // body.tx: Hash of the transaction that deployed the contract.
-    // body.abi: JSON-formatted ABI of compiled smart contract.
-    // body.source: Minified source code of the smart contract.
-    // body.fileName: File name used to compile the contract.
-    // body.compilerVersion: Compiler version used to compile the contract. E.g. "0.5.14". Defaults to "latest".
-    // Returns contract information.
-    updateContract(@Body() body: UpdateContractDto) {
+    @ApiOperation({ summary: 'Verify and update contract in DB from already deployed contract.' })
+    @Patch()
+    updateContract(@Body() body: UpdateContractDto): Promise<contract> {
         const { tx, abi, source, fileName, compilerVersion = 'latest' } = body;
         return this.contractsService.updateContract(tx, abi, source, fileName, compilerVersion);
     }
 
-    @Get() // Get list of all cached smart contracts.
-    // Returns list of contracts.
-    getAll() {
+    @ApiOperation({ summary: 'Get list of all stored smart contracts.' })
+    @Get()
+    getAll(): Promise<contract[]> {
         return this.contractsService.getAll();
     }
 
-    @Get(':id') // Get a single contract.
-    // id: ID of smart contract.
-    // Returns a single contract.
-    getOne(@Param() queryParams: GetOneDto) {
+    @ApiOperation({ summary: 'Get a single smart contract.' })
+    @Get(':id')
+    getOne(@Param() queryParams: GetOneDto): Promise<contract> {
         return this.contractsService.getOne(queryParams.id);
     }
 }

@@ -4,20 +4,17 @@ import { SendDto, SendNewDto } from './dtos/send.dto';
 import { UpdateTransactionDto } from './dtos/update-transaction.dto';
 import { GetOneDto } from './dtos/get-one.dto';
 import { GetBalanceDto } from './dtos/get-balance.dto';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { transaction } from '@prisma/client';
 
+@ApiTags('Transactions')
 @Controller('transactions')
 export class TransactionsController {
     constructor(private transactionsService: TransactionsService) {}
 
-    @Post() // Send ethers to address.
-    // Either
-        // body.new.to: Address to send to.
-        // body.new.quant: Quantity (in ethers).
-        // body.new.gasSettings (optional): Gas settings (gasPrice & gasLimit) for the tx.
-    // Or
-        // body.raw.tx: Raw tx in hex format.
-    // Returns tx information.
-    send(@Body() body: SendDto) {
+    @ApiOperation({ summary: 'Send Ethers to address.' })
+    @Post()
+    send(@Body() body: SendDto): Promise<transaction> {
         if (body.new && body.raw) throw new BadRequestException('Can\'t have both {"new", "raw"} in body')
         else if (body.new) {
             const { to, quant } = body.new;
@@ -30,41 +27,37 @@ export class TransactionsController {
         else throw new BadRequestException('Missing at least one of {"new", "raw"} in body');
     }
 
-    @Get() // Get list of all cached txs.
-    // Returns list of tx.
-    getAll() {
+    @ApiOperation({ summary: 'Get list of all stored transactions.' })
+    @Get()
+    getAll(): Promise<transaction[]> {
         return this.transactionsService.getAll();
     }
 
-    @Get(':txHash') // Get a single tx.
-    // txHash: hash of the tx.
-    // Returns a single tx.
-    getOne(@Param() queryParams: GetOneDto) {
-        return this.transactionsService.getOne(queryParams.txHash)
+    @ApiOperation({ summary: 'Get a single transaction.' })
+    @Get(':txHash')
+    getOne(@Param() queryParams: GetOneDto): Promise<transaction> {
+        const { txHash } = queryParams;
+        return this.transactionsService.getOne(txHash)
     }
 
-    @Patch() // Update contract in DB from already deployed contract.
-    // body.hash: Hash of the tx.
-    // Returns tx information.
-    updateTransaction(@Body() body: UpdateTransactionDto) {
-        const { hash } = body;
-        return this.transactionsService.updateTransaction(hash);
+    @ApiOperation({ summary: 'Update transaction in DB from an already mined transaction.' })
+    @Patch()
+    updateTransaction(@Body() body: UpdateTransactionDto): Promise<transaction> {
+        const { txHash } = body;
+        return this.transactionsService.updateTransaction(txHash);
     }
 
-    @Get('balance/:addr') // Get balance (in ethers) of an address.
-    // addr: Wallet address.
-    getBalance(@Param() queryParams: GetBalanceDto) {
+    @ApiOperation({ summary: 'Get balance, in Ethers, of an address.' })
+    @Get('balance/:addr')
+    getBalance(@Param() queryParams: GetBalanceDto): Promise<string> {
         const { addr } = queryParams;
         return this.transactionsService.getBalance(addr);
     }
 
-    @Post('sign') // Sign tx.
-    // body.to: Address to send to.
-    // body.quant: Quantity (in ethers).
-    // body.gasSettings (optional): Gas settings (gasPrice & gasLimit) for the tx.
-    // Returns raw tx in hex format.
-    async sign(@Body() body: SendNewDto) {
+    @ApiOperation({ summary: 'Sign a transaction.' })
+    @Post('sign')
+    sign(@Body() body: SendNewDto): Promise<string> {
         const { to, quant, gasSettings } = body;
-        return { bytecode: await this.transactionsService.sign(to, quant, gasSettings) };
+        return this.transactionsService.sign(to, quant, gasSettings);
     }
 }
