@@ -1,16 +1,22 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
-import { Contract, ethers } from "ethers";
+import { ethers } from "ethers";
 import { TransactionsService } from 'src/transactions/transactions.service';
 import { PrismaService } from '../prisma/prisma.service';
 const solc = require('solc');
 const fs = require('fs');
 import { promisify } from 'util';
+import { contract } from '@prisma/client';
 
 @Injectable()
 export class ContractsService {
     constructor(private prisma: PrismaService, private transactionsService: TransactionsService) {}
 
-    async get(id: number, func: string, args: string[]) {
+    /**
+     * Call view function of a smart contract.
+     * @param id Id of the smart contract
+     * @returns Returned value from contract
+    **/
+    async get(id: number, func: string, args: string[]): Promise<string> {
         const storedContract = await this.getOne(id);
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
         const contract = new ethers.Contract(storedContract.address, storedContract.abi, provider);
@@ -19,7 +25,12 @@ export class ContractsService {
         return returnValue;
     }
 
-    async set(id: number, func: string, args: string[], gasSettings: any, q: number) {
+    /**
+     * Call update function of a smart contract.
+     * @param id Id of the smart contract
+     * @returns Updating transaction
+    **/
+    async set(id: number, func: string, args: string[], gasSettings: any, q: number): Promise<any> {
         gasSettings = gasSettings || {};
         const {
             gasLimit: gasLimitSetting,
@@ -49,7 +60,12 @@ export class ContractsService {
         return this.transactionsService.updateTransaction(receipt.hash); // Store and return the tx.
     }
 
-    private async _store(abi: string, bytecode: string, source: string, address: string, tx: string, verified: boolean) {
+    /**
+     * Store smart contract in database.
+     * @param tx Transaction hash in which is deployed
+     * @param verified Verified status
+    **/
+    private async _store(abi: string, bytecode: string, source: string, address: string, tx: string, verified: boolean): Promise<contract> {
         return await this.prisma.contract.upsert({
             where: { address },
             update: {
@@ -71,7 +87,12 @@ export class ContractsService {
         });
     }
 
-    private _resolveVersion(version: string) {
+    /**
+     * Resolve the Solidity Compiler (solc) version from a string.
+     * @param version String following the "x.x.x" convention
+     * @returns "vx.x.x+commit.xxxxxxx.js"-formatted version
+    **/
+    private _resolveVersion(version: string): string {
         const data = fs.readFileSync('solidity-versions.json', {
             encoding:'utf8',
             flag:'r'
@@ -81,7 +102,11 @@ export class ContractsService {
         return found ? 'v'+found.longVersion : 'latest'; // If version is not found, use latest.
     }
 
-    private async _verify(bytecode: string, source: string, compilerVersion: string, fileName: string) {
+    /**
+     * Check if bytecode is generated from source code.
+     * @param version String following the "x.x.x" convention
+    **/
+    private async _verify(bytecode: string, source: string, compilerVersion: string, fileName: string): Promise<boolean> {
         if (bytecode === '0x') return false;
 
         const sources = {};
@@ -113,7 +138,12 @@ export class ContractsService {
         return compiledBytecode === bytecode;
     }
 
-    async deploy(abi: string, bytecode: string, source: string, gasSettings: any, fileName: string, compilerVersion: string) {
+    /**
+     * Deploy a new smart contract. If possible, try to verify source code
+     * using ABI.
+     * @param compilerVersion String following the "x.x.x" convention
+    **/
+    async deploy(abi: string, bytecode: string, source: string, gasSettings: any, fileName: string, compilerVersion: string): Promise<contract> {
         let verified = false;
         if (source && fileName && compilerVersion) // If possible, try to verify.
             verified = await this._verify(bytecode, source, compilerVersion, fileName);
@@ -139,36 +169,54 @@ export class ContractsService {
         const addr = await contract.getAddress();
         const tx = contract.deploymentTransaction().hash;
 
-        const sc = await this._store(abi, bytecode, source, addr, tx, verified);
-        this._parseABI(sc);
+        const storedContract = await this._store(abi, bytecode, source, addr, tx, verified);
+        storedContract.abi = this._parseABI(storedContract);
 
         this.transactionsService.updateTransaction(tx);
-        return sc;
+        return storedContract;
     }
 
-    private _parseABI(sc: any) {
-        sc.abi = JSON.parse(sc.abi);
+    /**
+     * Deploy a new smart contract.
+     * @param compilerVersion String following the "x.x.x" convention
+    **/
+    private _parseABI(sc: any): string {
+        return JSON.parse(sc.abi);
     }
 
-    async getAll() {
+    /**
+     * Get all stored contracts.
+    **/
+    async getAll(): Promise<contract[]> {
         const contracts = await this.prisma.contract.findMany();
-        contracts.forEach(this._parseABI);
+        contracts.forEach(contract => { contract.abi = this._parseABI(contract) });
         return contracts;
     }
 
-    async getOne(id: number) {
+    /**
+     * Get one stored contract.
+    **/
+    async getOne(id: number): Promise<contract> {
         const contract = await this.prisma.contract.findUniqueOrThrow({ where: { id } });
-        this._parseABI(contract);
+        contract.abi = this._parseABI(contract);
         return contract;
     }
 
-    async _getOneByTx(tx: string) {
+    /**
+     * Get one stored contract using transaction.
+     * @param tx Transaction hash of the contract
+    **/
+    async _getOneByTx(tx: string): Promise<contract> {
         const contract = await this.prisma.contract.findUniqueOrThrow({ where: { tx } });
         this._parseABI(contract);
+        contract.abi = this._parseABI(contract);
         return contract;
     }
 
-    async updateContract(tx: string, abi: string, source: string, fileName: string, compilerVersion: string) {
+    /**
+     * Update and verify stored contract information.
+    **/
+    async updateContract(tx: string, abi: string, source: string, fileName: string, compilerVersion: string): Promise<contract> {
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
         const addr = (await provider.getTransactionReceipt(tx))?.contractAddress;
         if (!addr) throw new ConflictException('Contract hasn\'t been deployed yet');
@@ -180,10 +228,10 @@ export class ContractsService {
             if (!verified) throw new BadRequestException('Source code doesn\'t match');
         }
 
-        const sc = await this._store(abi, bytecode, source, addr, tx, true); // Always verify when updating.
-        this._parseABI(sc);
+        const contract = await this._store(abi, bytecode, source, addr, tx, true); // Always verify when updating.
+        contract.abi = this._parseABI(contract);
 
         this.transactionsService.updateTransaction(tx);
-        return sc;
+        return contract;
     }
 }

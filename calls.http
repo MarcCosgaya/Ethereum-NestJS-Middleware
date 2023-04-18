@@ -1,8 +1,8 @@
 ### Get storage value
-GET http://localhost:3000/contracts/26/call/get
+GET http://localhost:3000/contracts/3/call/get
 
 ### Set storage value
-POST http://localhost:3000/contracts/26/call
+POST http://localhost:3000/contracts/3/call
 content-type: application/json
 
 {
@@ -11,7 +11,7 @@ content-type: application/json
 }
 
 ### Pay
-POST http://localhost:3000/contracts/26/call
+POST http://localhost:3000/contracts/3/call
 content-type: application/json
 
 {
@@ -41,7 +41,7 @@ PUT http://localhost:3000/contracts
 content-type: application/json
 
 {
-    "tx": "0x746b8d2071e3e805e0c5fd2c6f1f370436bbaaaed72f42cecb51bf79fe55132a",
+    "tx": "0x0ce48a5a0779e86dcdfd546098de79e2ba4e46bca478461f6c6f9a9565c55d93",
     "abi": "[{\"constant\":false,\"inputs\":[],\"name\":\"get\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"type\":\"function\",\"stateMutability\":\"nonpayable\"},{\"constant\":false,\"inputs\":[],\"name\":\"set\",\"outputs\":[],\"payable\":false,\"type\":\"function\",\"stateMutability\":\"nonpayable\"}]",
     "source": "pragma solidity ^0.5.0; contract SimpleStorage { uint x; function set() public { x = 333; } function get() public view returns (uint) { return x; } function pay() public payable {} }",
     "fileName": "contract-2c390734c4.sol",
@@ -55,7 +55,7 @@ content-type: application/json
 {
     "new": {
         "to": "0x54c379a6db831e890c9236b6339B505807Dc705C",
-        "quant": 0.01
+        "quant": 5
     }
 }
 
@@ -74,15 +74,15 @@ GET http://localhost:3000/transactions
 GET http://localhost:3000/transactions/0x831df208aeb870a71a48e1a9e7d7d5aff4b7e7c7ee625de48ca0063fe37f297c
 
 ### Get balance
-GET http://localhost:3000/transactions/balance/0x831df208aeb870a71a48e1a9e7d7d5aff4b7e7c7ee625de48ca0063fe37f297c
+GET http://localhost:3000/transactions/balance/0xA46B8f9D99446AF2E0d536B4A89C17Cb62A6ad8A
 
 ### Sign tx
 POST http://localhost:3000/transactions/sign
 content-type: application/json
 
 {
-    "to": "0x54c379a6db831e890c9236b6339B505807Dc705C",
-    "quant": 0.01
+    "to": "0xeC575A32d136A0a94b26212c54E14b37563BF8A3",
+    "quant": 69
 }
 
 ### Send raw tx

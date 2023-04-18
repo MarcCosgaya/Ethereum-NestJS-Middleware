@@ -1,4 +1,4 @@
-import { Controller, Get, Body, Post, Put, Param, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Body, Post, Param, BadRequestException, Patch } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { SendDto, SendNewDto } from './dtos/send.dto';
 import { UpdateTransactionDto } from './dtos/update-transaction.dto';
@@ -43,7 +43,7 @@ export class TransactionsController {
         return this.transactionsService.getOne(queryParams.txHash)
     }
 
-    @Put() // Update contract in DB from already deployed contract.
+    @Patch() // Update contract in DB from already deployed contract.
     // body.hash: Hash of the tx.
     // Returns tx information.
     updateTransaction(@Body() body: UpdateTransactionDto) {

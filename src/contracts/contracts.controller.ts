@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Query, Put, Body } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, Body, Patch } from '@nestjs/common';
 import { ContractsService } from './contracts.service';
 import { DeployDto } from './dtos/deploy.dto';
 import { GetOneDto } from './dtos/get-one.dto';
@@ -46,7 +46,7 @@ export class ContractsController {
         return this.contractsService.deploy(abi, bytecode, source, gasSettings, fileName, compilerVersion);
     }
 
-    @Put() // Verify and update contract in DB from already deployed contract.
+    @Patch() // Verify and update contract in DB from already deployed contract.
     // body.tx: Hash of the transaction that deployed the contract.
     // body.abi: JSON-formatted ABI of compiled smart contract.
     // body.source: Minified source code of the smart contract.

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { transaction } from '@prisma/client';
 import { ethers } from 'ethers';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -6,13 +7,19 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class TransactionsService {
     constructor(private prisma: PrismaService) {}
 
-    private async _store(from: string, to: string, quantity: bigint, hash: string, blockHeight: number, gasUsed: bigint, gasPrice: bigint, gasLimit: bigint) {
+    /**
+     * Store transaction in database.
+     * @param from Sender address
+     * @param to Recipient address
+     * @param quant Quantity in Wei
+    **/
+    private async _store(from: string, to: string, quant: bigint, hash: string, blockHeight: number, gasUsed: bigint, gasPrice: bigint, gasLimit: bigint): Promise<transaction> {
         return await this.prisma.transaction.upsert({
             where: { hash },
             update: {
                 from,
                 to: to || ethers.ZeroAddress,
-                quantity,
+                quantity: quant,
                 hash,
                 blockHeight,
                 gasUsed,
@@ -22,7 +29,7 @@ export class TransactionsService {
             create: {
                 from,
                 to: to || ethers.ZeroAddress,
-                quantity,
+                quantity: quant,
                 hash,
                 blockHeight,
                 gasUsed,
@@ -32,7 +39,12 @@ export class TransactionsService {
         });
     }
     
-    async send(to: string, q: number, gasSettings: any) {
+    /**
+     * Send Ethers.
+     * @param to Recipient address
+     * @param quant Quantity in Ethers
+    **/
+    async send(to: string, quant: number, gasSettings: any): Promise<transaction> {
         gasSettings = gasSettings || {};
         const {
             gasLimit: gasLimitSetting,
@@ -46,7 +58,7 @@ export class TransactionsService {
 
         const request = {
             to,
-            value: ethers.parseEther(q.toString()),
+            value: ethers.parseEther(quant.toString()),
             gasLimit: gasLimitSetting,
             gasPrice: gasPriceSetting,
             maxFeePerGas: maxFeePerGasSetting,
@@ -70,7 +82,10 @@ export class TransactionsService {
         return await this._parseTx(storedTransaction);
     }
 
-    async updateTransaction(hash: string) {
+    /**
+     * Update stored transaction with block data.
+    **/
+    async updateTransaction(hash: string): Promise<transaction> {
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
 
         const response = await provider.getTransaction(hash); // Somehow ethers still says it's a receipt :(
@@ -90,50 +105,78 @@ export class TransactionsService {
         return await this._parseTx(storedTransaction);
     }
 
-    private async _parseTx(tx: any) {
+    /**
+     * Parse a transaction.
+    **/
+    private async _parseTx(tx: any): Promise<transaction> {
         this._parseBigInts(tx);
-        await this._checkSmartContract(tx);
-        await this._checkConfirmations(tx);
+        tx.smartContract = await this._checkSmartContract(tx);
+        tx.confirmations = await this._checkConfirmations(tx);
         return tx;
     }
 
-    private _parseBigInts(tx: any) { // Parse BigInts of a stored tx into strings because JSON.stringify still doesn't work with BigInts :(
+    /**
+     * Parse big ints into strings in a transaction.
+    **/
+    private _parseBigInts(tx: any): void { // Parse BigInts of a stored tx into strings because JSON.stringify still doesn't work with BigInts :(
         tx.quantity = tx.quantity.toString();
         tx.gasUsed = tx.gasUsed?.toString();
         tx.gasPrice = tx.gasPrice?.toString();
         tx.gasLimit = tx.gasLimit.toString();
     }
 
-    private async _checkConfirmations(tx: any) {
+    /**
+     * Get the amount of confirmations for transaction.
+    **/
+    private async _checkConfirmations(tx: transaction): Promise<number> {
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
         const receipt = await provider.getTransactionReceipt(tx.hash);
 
-        tx.confirmations = await receipt?.confirmations();
+        return await receipt?.confirmations();
     }
 
-    private async _checkSmartContract(tx: any) { // Returns whether the tx is done to a smart contract address.
+    /**
+     * Check if transaction was done to a smart contract.
+    **/
+    private async _checkSmartContract(tx: transaction): Promise<boolean> {
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
-        tx.smartContract = (await provider.getCode(tx.to)) !== '0x';
+        return (await provider.getCode(tx.to)) !== '0x';
     }
 
-    async getAll() {
+    /**
+     * Get all stored transactions.
+    **/
+    async getAll(): Promise<transaction[]> {
         const txs = await this.prisma.transaction.findMany();
         for (const tx of txs) await this._parseTx(tx);
         return txs;
     }
 
-    async getOne(txHash: string) {
+    /**
+     * Get one stored transaction.
+    **/
+    async getOne(txHash: string): Promise<transaction> {
         const tx = await this.prisma.transaction.findUniqueOrThrow({ where: { hash: txHash } });
         await this._parseTx(tx)
         return tx;
     }
 
-    async getBalance(addr: string) {
+    /**
+     * Get the balance of an address.
+     * @returns Balance in Ethers
+    **/
+    async getBalance(addr: string): Promise<string> {
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
         return ethers.formatEther(await provider.getBalance(addr));
     }
 
-    async sign(to: string, q: number, gasSettings: any) {
+    /**
+     * Sign a transaction to send Ethers.
+     * @param to Recipient address
+     * @param quant Quantity in Ethers
+     * @returns Bytecode of signed transaction
+    **/
+    async sign(to: string, quant: number, gasSettings: any): Promise<string> {
         gasSettings = gasSettings || {};
         const {
             gasLimit: gasLimitSetting,
@@ -147,7 +190,7 @@ export class TransactionsService {
 
         const request = {
             to,
-            value: ethers.parseEther(q.toString()),
+            value: ethers.parseEther(quant.toString()),
             gasLimit: gasLimitSetting,
             gasPrice: gasPriceSetting,
             maxFeePerGas: maxFeePerGasSetting,
@@ -157,7 +200,11 @@ export class TransactionsService {
         return signer.signTransaction(await signer.populateTransaction(request))
     }
 
-    async sendSigned(signedTx: string) {
+    /**
+     * Broadcast an already signed transaction.
+     * @param signedTx Bytecode of the signed transaction
+    **/
+    async sendSigned(signedTx: string): Promise<transaction> {
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
 
         const response = await provider.broadcastTransaction(signedTx); // Somehow ethers still says it's a receipt :(
