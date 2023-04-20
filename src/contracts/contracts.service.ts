@@ -206,7 +206,7 @@ export class ContractsService {
      * Get one stored contract using transaction.
      * @param tx Transaction hash of the contract
     **/
-    async _getOneByTx(tx: string): Promise<contract> {
+    private async _getOneByTx(tx: string): Promise<contract> {
         const contract = await this.prisma.contract.findUniqueOrThrow({ where: { tx } });
         this._parseABI(contract);
         contract.abi = this._parseABI(contract);
