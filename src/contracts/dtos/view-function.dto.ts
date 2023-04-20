@@ -1,8 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger"
 import { Type } from "class-transformer"
-import { IsInt, IsString } from "class-validator"
+import { IsArray, IsInt, IsString } from "class-validator"
 
-export class ViewFunctionDto {
+export class ViewFunctionParamDto {
     @ApiProperty({ description: 'Contract id.' })
     @Type(() => Number)
     @IsInt()
@@ -11,4 +11,11 @@ export class ViewFunctionDto {
     @ApiProperty({ description: 'Function name in smart contract.' })
     @IsString()
     func: string
+}
+
+export class ViewFunctionQueryDto {
+    @ApiProperty({ description: 'List of arguments of the function.' })
+    @IsArray()
+    @IsString({ each: true })
+    args: string[]
 }

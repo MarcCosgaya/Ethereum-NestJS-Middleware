@@ -4,7 +4,7 @@ import { DeployDto } from './dtos/deploy.dto';
 import { GetOneDto } from './dtos/get-one.dto';
 import { UpdateContractDto } from './dtos/update-contract.dto';
 import { UpdateFunctionBodyDto, UpdateFunctionParamDto } from './dtos/update-function.dto';
-import { ViewFunctionDto } from './dtos/view-function.dto';
+import { ViewFunctionParamDto, ViewFunctionQueryDto } from './dtos/view-function.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { contract, transaction } from '@prisma/client';
 
@@ -15,7 +15,7 @@ export class ContractsController {
 
     @ApiOperation({ summary: 'Call view function in smart contract.' })
     @Get(':id/call/:func')
-    viewFunction(@Param() queryParams: ViewFunctionDto, @Query() params: any): Promise<string> {
+    viewFunction(@Param() queryParams: ViewFunctionParamDto, @Query() params: ViewFunctionQueryDto): Promise<string> {
         const { id, func } = queryParams;
         const { args } = params;
 
