@@ -9,7 +9,7 @@ import { contract, transaction } from '@prisma/client';
 
 @Injectable()
 export class ContractsService {
-    constructor(private prisma: PrismaService, private transactionsService: TransactionsService) {}
+    constructor(private readonly prisma: PrismaService, private readonly transactionsService: TransactionsService) {}
 
     /**
      * Call view function of a smart contract.

@@ -11,7 +11,7 @@ import { contract, transaction } from '@prisma/client';
 @ApiTags('Contracts')
 @Controller('contracts')
 export class ContractsController {
-    constructor(private contractsService: ContractsService) {}
+    constructor(private readonly contractsService: ContractsService) {}
 
     @ApiOperation({ summary: 'Call view function in smart contract.' })
     @Get(':id/call/:func')

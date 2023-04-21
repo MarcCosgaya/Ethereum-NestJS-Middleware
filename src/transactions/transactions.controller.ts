@@ -10,7 +10,7 @@ import { transaction } from '@prisma/client';
 @ApiTags('Transactions')
 @Controller('transactions')
 export class TransactionsController {
-    constructor(private transactionsService: TransactionsService) {}
+    constructor(private readonly transactionsService: TransactionsService) {}
 
     @ApiOperation({ summary: 'Send Ethers to address.' })
     @Post()
