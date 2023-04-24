@@ -45,7 +45,7 @@ export class TransactionsService {
      * @param quant Quantity in Ethers
     **/
     async send(to: string, quant: number, gasSettings: any): Promise<transaction> {
-        gasSettings = gasSettings || {};
+        gasSettings = gasSettings ?? {};
         const {
             gasLimit: gasLimitSetting,
             gasPrice: gasPriceSetting,
@@ -177,7 +177,7 @@ export class TransactionsService {
      * @returns Bytecode of signed transaction
     **/
     async sign(to: string, quant: number, gasSettings: any): Promise<string> {
-        gasSettings = gasSettings || {};
+        gasSettings = gasSettings ?? {};
         const {
             gasLimit: gasLimitSetting,
             gasPrice: gasPriceSetting,

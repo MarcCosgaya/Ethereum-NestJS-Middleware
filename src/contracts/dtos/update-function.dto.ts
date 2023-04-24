@@ -1,34 +1,37 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger"
 import { Type } from "class-transformer"
-import { IsArray, IsInt, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator"
+import { IsArray, IsDefined, IsInt, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator"
 import { GasSettingsDto } from "src/app/gas-settings.dto"
 
 export class UpdateFunctionBodyDto {
     @ApiProperty({ description: 'Function name in smart contract.' })
     @IsString()
+    @IsDefined()
     func: string
 
     @ApiProperty({ description: 'List of arguments of the function.' })
     @IsArray()
     @IsString({ each: true })
+    @IsDefined()
     args: string[]
 
     @ApiPropertyOptional({ description: 'Gas settings for the transaction.' })
-    @IsOptional()
-    @Type(() => GasSettingsDto)
     @ValidateNested()
-    gasSettings: GasSettingsDto
+    @Type(() => GasSettingsDto)
+    @IsOptional()
+    gasSettings?: GasSettingsDto
 
     @ApiPropertyOptional({ description: 'Send Ethers if payable.' })
-    @IsOptional()
-    @Type(() => Number)
     @IsNumber()
-    quant: number
+    @Type(() => Number)
+    @IsOptional()
+    quant?: number
 }
 
 export class UpdateFunctionParamDto {
     @ApiProperty({ description: 'Contract id.' })
-    @Type(() => Number)
     @IsInt()
+    @Type(() => Number)
+    @IsDefined()
     id: number
 }

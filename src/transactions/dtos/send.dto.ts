@@ -1,42 +1,45 @@
 import { Type } from "class-transformer"
-import { IsEthereumAddress, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator"
+import { IsDefined, IsEthereumAddress, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator"
 import { GasSettingsDto } from "../../app/gas-settings.dto"
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger"
 
 export class SendNewDto {
     @ApiProperty({ description: 'Address to send to.' })
-    @IsString()
     @IsEthereumAddress()
+    @IsString()
+    @IsDefined()
     to: string
 
     @ApiProperty({ description: 'Quantity (in Ethers).' })
-    @Type(() => Number)
     @IsNumber()
+    @Type(() => Number)
+    @IsDefined()
     quant: number
 
     @ApiPropertyOptional({ description: 'Gas settings for the transaction.' })
-    @IsOptional()
-    @Type(() => GasSettingsDto)
     @ValidateNested()
-    gasSettings: GasSettingsDto
+    @Type(() => GasSettingsDto)
+    @IsOptional()
+    gasSettings?: GasSettingsDto
 }
 
 export class SendRawDto {
     @ApiProperty({ description: 'Raw transaction in hex format.' })
     @IsString()
+    @IsDefined()
     tx: string
 }
 
 export class SendDto {
     @ApiPropertyOptional({ description: 'Settings for a new transaction.' })
-    @IsOptional()
-    @Type(() => SendNewDto)
     @ValidateNested()
-    new: SendNewDto
+    @Type(() => SendNewDto)
+    @IsOptional()
+    new?: SendNewDto
 
     @ApiPropertyOptional({ description: 'Settings for a raw transaction.' })
-    @IsOptional()
-    @Type(() => SendRawDto)
     @ValidateNested()
-    raw: SendRawDto
+    @Type(() => SendRawDto)
+    @IsOptional()
+    raw?: SendRawDto
 }

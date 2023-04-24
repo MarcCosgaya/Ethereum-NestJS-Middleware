@@ -31,7 +31,7 @@ export class ContractsService {
      * @returns Updating transaction
     **/
     async set(id: number, func: string, args: string[], gasSettings: any, quant: number): Promise<transaction> {
-        gasSettings = gasSettings || {};
+        gasSettings = gasSettings ?? {};
         const {
             gasLimit: gasLimitSetting,
             gasPrice: gasPriceSetting,
@@ -148,7 +148,7 @@ export class ContractsService {
         if (source && fileName && compilerVersion) // If possible, try to verify.
             verified = await this._verify(bytecode, source, compilerVersion, fileName);
 
-        gasSettings = gasSettings || {};
+        gasSettings = gasSettings ?? {};
         const {
             gasLimit: gasLimitSetting,
             gasPrice: gasPriceSetting,

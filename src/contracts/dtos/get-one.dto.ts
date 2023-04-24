@@ -1,10 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger"
 import { Type } from "class-transformer"
-import { IsInt } from "class-validator"
+import { IsDefined, IsInt } from "class-validator"
 
 export class GetOneDto {
     @ApiProperty({ description: 'Contract id.' })
-    @Type(() => Number)
     @IsInt()
+    @Type(() => Number)
+    @IsDefined()
     id: number
 }

@@ -1,9 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger"
-import { IsEthereumAddress, IsString } from "class-validator"
+import { IsDefined, IsEthereumAddress, IsString } from "class-validator"
 
 export class GetBalanceDto {
     @ApiProperty({ description: 'Wallet address.' })
-    @IsString()
     @IsEthereumAddress()
+    @IsString()
+    @IsDefined()
     addr: string
 }
