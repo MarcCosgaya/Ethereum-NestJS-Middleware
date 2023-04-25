@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { transaction } from '@prisma/client';
 import { ethers } from 'ethers';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -89,6 +89,7 @@ export class TransactionsService {
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
 
         const response = await provider.getTransaction(hash); // Somehow ethers still says it's a receipt :(
+        if (!response) throw new NotFoundException('Transaction hash not found');
         const receipt = await provider.getTransactionReceipt(hash);
 
         const { from, to, value, gasLimit } = response;

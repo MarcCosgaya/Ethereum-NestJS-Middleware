@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger"
 import { Type } from "class-transformer"
-import { IsArray, IsDefined, IsInt, IsString } from "class-validator"
+import { IsArray, IsDefined, IsInt, IsOptional, IsString } from "class-validator"
 
 export class ViewFunctionParamDto {
     @ApiProperty({ description: 'Contract id.' })
@@ -19,6 +19,6 @@ export class ViewFunctionQueryDto {
     @ApiProperty({ description: 'List of arguments of the function.' })
     @IsArray()
     @IsString({ each: true })
-    @IsDefined()
-    args: string[]
+    @IsOptional()
+    args?: string[]
 }

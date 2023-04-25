@@ -12,8 +12,8 @@ export class UpdateFunctionBodyDto {
     @ApiProperty({ description: 'List of arguments of the function.' })
     @IsArray()
     @IsString({ each: true })
-    @IsDefined()
-    args: string[]
+    @IsOptional()
+    args?: string[]
 
     @ApiPropertyOptional({ description: 'Gas settings for the transaction.' })
     @ValidateNested()

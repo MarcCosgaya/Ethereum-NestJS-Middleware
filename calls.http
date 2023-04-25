@@ -6,8 +6,7 @@ POST http://localhost:3000/contracts/3/call
 content-type: application/json
 
 {
-    "func": "set",
-    "args": []
+    "func": "set"
 }
 
 ### Pay
@@ -16,8 +15,7 @@ content-type: application/json
 
 {
     "func": "pay",
-    "quant": 1,
-    "args": []
+    "quant": 1
 }
 
 ### Deploy SC
@@ -34,7 +32,7 @@ content-type: application/json
 GET http://localhost:3000/contracts
 
 ### Get one SC
-GET http://localhost:3000/contracts/26
+GET http://localhost:3000/contracts/1
 
 ### Update & Verify SC
 PATCH http://localhost:3000/contracts
@@ -55,7 +53,7 @@ content-type: application/json
 {
     "new": {
         "to": "0x1b973BC2cb3e4413a6B3E302357Fe9d1D586028e",
-        "quant": "4.3",
+        "quant": 4.3,
         "gasSettings": {
             "gasLimit": 21000,
             "gasPrice": 1122646121
@@ -68,14 +66,14 @@ PATCH  http://localhost:3000/transactions
 Content-type: application/json
 
 {
-    "hash": "0x5114267435cbf4ca29b8dd32882075924c49e8cdaa876f6c21c2540b28a49319"
+    "txHash": "0xa83dc996c182595ee819868a83e0f5b39c3088f04051494dba9fa784f4430a01"
 }
 
 ### Get all tx
 GET http://localhost:3000/transactions
 
 ### Get one tx
-GET http://localhost:3000/transactions/0x831df208aeb870a71a48e1a9e7d7d5aff4b7e7c7ee625de48ca0063fe37f297c
+GET http://localhost:3000/transactions/0x9df7ba8ae253f458defb309e55c6f374c31c504f1e19f073a913ec8a87fa717d
 
 ### Get balance
 GET http://localhost:3000/transactions/balance/0xA46B8f9D99446AF2E0d536B4A89C17Cb62A6ad8A
@@ -86,7 +84,7 @@ content-type: application/json
 
 {
     "to": "0x1b973BC2cb3e4413a6B3E302357Fe9d1D586028e",
-    "quant": 4.3
+    "quant": 4
 }
 
 ### Send raw tx
@@ -95,6 +93,6 @@ content-type: application/json
 
 {
     "raw": {
-        "tx": "0x02f87382053927843b9aca00843b9aca0e82523089454c379a6db831e890c9236b6339b505807dc705c872386f26fc1000080c001a0a9798c6fa2d372a88608fd3d04f99e39ea14332f33069111fc318c9ea366bda6a029b732f9f04c77c4bdf85929fa0a8194940dfbdb41a861cf7f43f4a925ed6cb6"
+        "tx": "0x02f87482053914843b9aca0084443bdd24825208941b973bc2cb3e4413a6b3e302357fe9d1d586028e883782dace9d90000080c001a02541d4e71162e152def63edb54e8c53a58cde7971af36f1382af8a7489060043a073e94bf43763a48c2e9bd4cb5597d378775c9f75d3d8f4b39ccf3aaaaeee17ab"
     }
 }
