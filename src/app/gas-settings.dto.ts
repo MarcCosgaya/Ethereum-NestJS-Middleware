@@ -3,13 +3,13 @@ import { Type } from "class-transformer"
 import { IsInt, IsOptional } from "class-validator"
 
 export class GasSettingsDto {
-    @ApiProperty({ type: BigInt })
+    @ApiProperty({ type: BigInt, example: 21000 })
     @IsInt()
     @Type(() => BigInt)
     @IsOptional()
     gasLimit?: BigInt
 
-    @ApiProperty({ type: BigInt })
+    @ApiProperty({ type: BigInt, example: 1122646121 })
     @IsInt()
     @Type(() => BigInt)
     @IsOptional()

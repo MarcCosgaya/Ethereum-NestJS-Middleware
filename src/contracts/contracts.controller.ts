@@ -5,7 +5,7 @@ import { GetOneDto } from './dtos/get-one.dto';
 import { UpdateContractDto } from './dtos/update-contract.dto';
 import { UpdateFunctionBodyDto, UpdateFunctionParamDto } from './dtos/update-function.dto';
 import { ViewFunctionParamDto, ViewFunctionQueryDto } from './dtos/view-function.dto';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { contract, transaction } from '@prisma/client';
 
 @ApiTags('Contracts')
