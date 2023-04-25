@@ -37,7 +37,7 @@ GET http://localhost:3000/contracts
 GET http://localhost:3000/contracts/26
 
 ### Update & Verify SC
-PUT http://localhost:3000/contracts
+PATCH http://localhost:3000/contracts
 content-type: application/json
 
 {
@@ -54,13 +54,17 @@ content-type: application/json
 
 {
     "new": {
-        "to": "0x54c379a6db831e890c9236b6339B505807Dc705C",
-        "quant": 5
+        "to": "0x1b973BC2cb3e4413a6B3E302357Fe9d1D586028e",
+        "quant": "4.3",
+        "gasSettings": {
+            "gasLimit": 21000,
+            "gasPrice": 1122646121
+        }
     }
 }
 
 ### Update tx
-PUT http://localhost:3000/transactions
+PATCH  http://localhost:3000/transactions
 Content-type: application/json
 
 {
@@ -81,8 +85,8 @@ POST http://localhost:3000/transactions/sign
 content-type: application/json
 
 {
-    "to": "0xeC575A32d136A0a94b26212c54E14b37563BF8A3",
-    "quant": 69
+    "to": "0x1b973BC2cb3e4413a6B3E302357Fe9d1D586028e",
+    "quant": 4.3
 }
 
 ### Send raw tx

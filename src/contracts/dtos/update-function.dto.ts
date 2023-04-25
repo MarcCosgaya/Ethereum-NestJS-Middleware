@@ -23,7 +23,6 @@ export class UpdateFunctionBodyDto {
 
     @ApiPropertyOptional({ description: 'Send Ethers if payable.' })
     @IsNumber()
-    @Type(() => Number)
     @IsOptional()
     quant?: number
 }
@@ -31,7 +30,7 @@ export class UpdateFunctionBodyDto {
 export class UpdateFunctionParamDto {
     @ApiProperty({ description: 'Contract id.' })
     @IsInt()
-    @Type(() => Number)
+    @Type(() => Number) // This is needed for @Param() and @Query().
     @IsDefined()
     id: number
 }

@@ -12,7 +12,6 @@ export class SendNewDto {
 
     @ApiProperty({ description: 'Quantity (in Ethers).' })
     @IsNumber()
-    @Type(() => Number)
     @IsDefined()
     quant: number
 

@@ -1,25 +1,29 @@
 import { ApiProperty } from "@nestjs/swagger"
 import { Type } from "class-transformer"
-import { IsInt } from "class-validator"
+import { IsInt, IsOptional } from "class-validator"
 
 export class GasSettingsDto {
     @ApiProperty({ type: BigInt })
-    @Type(() => BigInt)
     @IsInt()
-    gasLimit: BigInt
+    @Type(() => BigInt)
+    @IsOptional()
+    gasLimit?: BigInt
 
     @ApiProperty({ type: BigInt })
-    @Type(() => BigInt)
     @IsInt()
-    gasPrice: BigInt
+    @Type(() => BigInt)
+    @IsOptional()
+    gasPrice?: BigInt
 
     @ApiProperty({ type: BigInt })
-    @Type(() => BigInt)
     @IsInt()
-    maxFeePerGas: BigInt
+    @Type(() => BigInt)
+    @IsOptional()
+    maxFeePerGas?: BigInt
 
     @ApiProperty({ type: BigInt })
-    @Type(() => BigInt)
     @IsInt()
-    maxPriorityFeePerGas: BigInt
+    @Type(() => BigInt)
+    @IsOptional()
+    maxPriorityFeePerGas?: BigInt
 }
