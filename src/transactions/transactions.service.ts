@@ -147,8 +147,11 @@ export class TransactionsService {
     /**
      * Get all stored transactions.
     **/
-    async getAll(): Promise<transaction[]> {
-        const txs = await this.prisma.transaction.findMany();
+    async getAll(pageSize: number, pageIndex: number): Promise<transaction[]> {
+        const txs = await this.prisma.transaction.findMany({
+            skip: pageSize*pageIndex,
+            take: pageSize,
+        });
         for (const tx of txs) await this._parseTx(tx);
         return txs;
     }

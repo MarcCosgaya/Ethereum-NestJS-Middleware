@@ -35,8 +35,9 @@ export class UpdateContractDto {
     fileName: string
 
     @ApiPropertyOptional({
-        description: 'Compiler version used to compile the contract. Defaults to "latest".',
-        example: '0.5.14'
+        description: 'Compiler version used to compile the contract.',
+        example: '0.5.14',
+        default: 'latest'
     })
     @IsString()
     @IsOptional()

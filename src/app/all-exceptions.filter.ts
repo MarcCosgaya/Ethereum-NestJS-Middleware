@@ -11,7 +11,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof HttpException) { // Resend if already an HTTP exception.
       response.status(exception.getStatus());
       const { message } = exception.getResponse() as any;
-      response.json({ message: Array.isArray(message) ? message[0] : message })
+      response.json({ message: Array.isArray(message) ? message[0] : message });
     }
     else {
       switch (exception.code) {

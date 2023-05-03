@@ -29,7 +29,7 @@ content-type: application/json
 }
 
 ### Get all stored SCs
-GET http://localhost:3000/contracts
+GET http://localhost:3000/contracts?pageSize=3&pageIndex=2
 
 ### Get one SC
 GET http://localhost:3000/contracts/1
@@ -70,7 +70,7 @@ Content-type: application/json
 }
 
 ### Get all tx
-GET http://localhost:3000/transactions
+GET http://localhost:3000/transactions?pageSize=5&pageIndex=2
 
 ### Get one tx
 GET http://localhost:3000/transactions/0x9df7ba8ae253f458defb309e55c6f374c31c504f1e19f073a913ec8a87fa717d

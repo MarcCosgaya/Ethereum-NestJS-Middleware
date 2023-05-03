@@ -1,4 +1,4 @@
-import { Controller, Get, Body, Post, Param, BadRequestException, Patch } from '@nestjs/common';
+import { Controller, Get, Body, Post, Param, BadRequestException, Patch, Query } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { SendDto, SendNewDto } from './dtos/send.dto';
 import { UpdateTransactionDto } from './dtos/update-transaction.dto';
@@ -6,6 +6,7 @@ import { GetOneDto } from './dtos/get-one.dto';
 import { GetBalanceDto } from './dtos/get-balance.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { transaction } from '@prisma/client';
+import { PaginationDto } from 'src/app/pagination.dto';
 
 @ApiTags('Transactions')
 @Controller('transactions')
@@ -29,8 +30,9 @@ export class TransactionsController {
 
     @ApiOperation({ summary: 'Get list of all stored transactions.' })
     @Get()
-    getAll(): Promise<transaction[]> {
-        return this.transactionsService.getAll();
+    getAll(@Query() params: PaginationDto): Promise<transaction[]> {
+        const { pageSize = 10, pageIndex = 0 } = params;
+        return this.transactionsService.getAll(pageSize, pageIndex);
     }
 
     @ApiOperation({ summary: 'Get a single transaction.' })

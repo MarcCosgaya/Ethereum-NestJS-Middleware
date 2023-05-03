@@ -5,8 +5,9 @@ import { GetOneDto } from './dtos/get-one.dto';
 import { UpdateContractDto } from './dtos/update-contract.dto';
 import { UpdateFunctionBodyDto, UpdateFunctionParamDto } from './dtos/update-function.dto';
 import { ViewFunctionParamDto, ViewFunctionQueryDto } from './dtos/view-function.dto';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { contract, transaction } from '@prisma/client';
+import { PaginationDto } from 'src/app/pagination.dto';
 
 @ApiTags('Contracts')
 @Controller('contracts')
@@ -33,7 +34,7 @@ export class ContractsController {
     @ApiOperation({ summary: 'Deploy a precompiled smart contract.' })
     @Post()
     deploy(@Body() body: DeployDto): Promise<contract> {
-        const { abi, bytecode, source, gasSettings, fileName, compilerVersion } = body;
+        const { abi, bytecode, source, gasSettings, fileName, compilerVersion = 'latest' } = body;
         return this.contractsService.deploy(abi, bytecode, source, gasSettings, fileName, compilerVersion);
     }
 
@@ -46,8 +47,9 @@ export class ContractsController {
 
     @ApiOperation({ summary: 'Get list of all stored smart contracts.' })
     @Get()
-    getAll(): Promise<contract[]> {
-        return this.contractsService.getAll();
+    getAll(@Query() params: PaginationDto): Promise<contract[]> {
+        const { pageSize = 10, pageIndex = 0 } = params;
+        return this.contractsService.getAll(pageSize, pageIndex);
     }
 
     @ApiOperation({ summary: 'Get a single smart contract.' })

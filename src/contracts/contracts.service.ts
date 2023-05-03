@@ -177,18 +177,22 @@ export class ContractsService {
     }
 
     /**
-     * Deploy a new smart contract.
-     * @param compilerVersion String following the "x.x.x" convention
+     * Parse the ABI of a smart contract.
+     * @param sc Smart contract
+     * @returns ABI as JS object
     **/
-    private _parseABI(sc: any): string {
+    private _parseABI(sc: any): any {
         return JSON.parse(sc.abi);
     }
 
     /**
      * Get all stored contracts.
     **/
-    async getAll(): Promise<contract[]> {
-        const contracts = await this.prisma.contract.findMany();
+    async getAll(pageSize: number, pageIndex: number): Promise<contract[]> {
+        const contracts = await this.prisma.contract.findMany({
+            skip: pageSize*pageIndex,
+            take: pageSize,
+        });
         contracts.forEach(contract => { contract.abi = this._parseABI(contract) });
         return contracts;
     }
@@ -208,7 +212,6 @@ export class ContractsService {
     **/
     private async _getOneByTx(tx: string): Promise<contract> {
         const contract = await this.prisma.contract.findUniqueOrThrow({ where: { tx } });
-        this._parseABI(contract);
         contract.abi = this._parseABI(contract);
         return contract;
     }
