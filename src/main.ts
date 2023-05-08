@@ -14,8 +14,6 @@ async function bootstrap() {
     .setTitle('Ethereum-NestJS-Middleware')
     .setDescription('NestJS API for interacting with the Ethereum blockchain.')
     .setVersion('0.0.3')
-    .addTag('Transactions')
-    .addTag('Contracts')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document, { swaggerOptions });
