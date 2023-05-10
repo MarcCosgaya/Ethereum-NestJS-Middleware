@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { transaction } from '@prisma/client';
-import { ethers } from 'ethers';
+import { BaseWallet, HDNodeWallet, ethers, formatEther } from 'ethers';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -13,7 +13,7 @@ export class TransactionsService {
      * @param to Recipient address
      * @param quant Quantity in Wei
     **/
-    private async _store(from: string, to: string, quant: bigint, hash: string, blockHeight: number, gasUsed: bigint, gasPrice: bigint, gasLimit: bigint): Promise<transaction> {
+    private async _store(from: string, to: string, quant: number, hash: string, blockHeight: number, gasUsed: bigint, gasPrice: bigint, gasLimit: bigint): Promise<transaction> {
         return await this.prisma.transaction.upsert({
             where: { hash },
             update: {
@@ -44,7 +44,7 @@ export class TransactionsService {
      * @param to Recipient address
      * @param quant Quantity in Ethers
     **/
-    async send(to: string, quant: number, gasSettings: any): Promise<transaction> {
+    async send(to: string, quant: number, gasSettings: any, mnemonic: string = undefined, password: string = undefined, path: string = undefined): Promise<transaction> {
         gasSettings = gasSettings ?? {};
         const {
             gasLimit: gasLimitSetting,
@@ -54,7 +54,9 @@ export class TransactionsService {
         } = gasSettings;
 
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
-        const signer = new ethers.Wallet(process.env.PKEY, provider);
+        let signer: BaseWallet;
+        try { signer = HDNodeWallet.fromPhrase(mnemonic, password, path); signer = signer.connect(provider); }
+        catch { signer = new ethers.Wallet(process.env.PKEY, provider); }
 
         const request = {
             to,
@@ -72,11 +74,11 @@ export class TransactionsService {
         var storedTransaction: any;
         if (receipt) {
             const { blockNumber, gasUsed, gasPrice } = receipt;
-            storedTransaction = await this._store(from, to, value, hash, blockNumber, gasUsed, gasPrice, gasLimit);
+            storedTransaction = await this._store(from, to, Number(formatEther(value)), hash, blockNumber, gasUsed, gasPrice, gasLimit);
             storedTransaction.confirmations = await receipt.confirmations();
         }
         else {
-            storedTransaction = await this._store(from, to, value, hash, null, null, null, gasLimit);
+            storedTransaction = await this._store(from, to, Number(formatEther(value)), hash, null, null, null, gasLimit);
         }
 
         return await this._parseTx(storedTransaction);
@@ -96,11 +98,11 @@ export class TransactionsService {
         var storedTransaction: any;
         if (receipt) {
             const { blockNumber, gasUsed, gasPrice } = receipt;
-            storedTransaction = await this._store(from, to, value, hash, blockNumber, gasUsed, gasPrice, gasLimit);
+            storedTransaction = await this._store(from, to, Number(formatEther(value)), hash, blockNumber, gasUsed, gasPrice, gasLimit);
             storedTransaction.confirmations = await receipt.confirmations();
         }
         else {
-            storedTransaction = await this._store(from, to, value, hash, null, null, null, gasLimit);
+            storedTransaction = await this._store(from, to, Number(formatEther(value)), hash, null, null, null, gasLimit);
         }
 
         return await this._parseTx(storedTransaction);
@@ -180,7 +182,7 @@ export class TransactionsService {
      * @param quant Quantity in Ethers
      * @returns Bytecode of signed transaction
     **/
-    async sign(to: string, quant: number, gasSettings: any): Promise<string> {
+    async sign(to: string, quant: number, gasSettings: any, mnemonic: string = undefined, password: string = undefined, path: string = undefined): Promise<string> {
         gasSettings = gasSettings ?? {};
         const {
             gasLimit: gasLimitSetting,
@@ -190,7 +192,9 @@ export class TransactionsService {
         } = gasSettings;
 
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
-        const signer = new ethers.Wallet(process.env.PKEY, provider);
+        let signer: BaseWallet;
+        try { signer = HDNodeWallet.fromPhrase(mnemonic, password, path); signer = signer.connect(provider); }
+        catch { signer = new ethers.Wallet(process.env.PKEY, provider); }
 
         const request = {
             to,
@@ -218,11 +222,11 @@ export class TransactionsService {
         var storedTransaction: any;
         if (receipt) {
             const { blockNumber, gasUsed, gasPrice } = receipt;
-            storedTransaction = await this._store(from, to, value, hash, blockNumber, gasUsed, gasPrice, gasLimit);
+            storedTransaction = await this._store(from, to, Number(formatEther(value)), hash, blockNumber, gasUsed, gasPrice, gasLimit);
             storedTransaction.confirmations = await receipt.confirmations();
         }
         else {
-            storedTransaction = await this._store(from, to, value, hash, null, null, null, gasLimit);
+            storedTransaction = await this._store(from, to, Number(formatEther(value)), hash, null, null, null, gasLimit);
         }
 
         return await this._parseTx(storedTransaction);

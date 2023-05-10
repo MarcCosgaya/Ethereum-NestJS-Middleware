@@ -28,7 +28,7 @@ model transaction {
   id Int @id @default(autoincrement())
   from String
   to String
-  quantity BigInt
+  quantity Float
   hash String @unique
   blockHeight Int?
   gasUsed BigInt?

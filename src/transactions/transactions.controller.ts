@@ -18,8 +18,9 @@ export class TransactionsController {
     send(@Body() body: SendDto): Promise<transaction> {
         if (body.new && body.raw) throw new BadRequestException('Can\'t have both {"new", "raw"} in body')
         else if (body.new) {
-            const { to, quant } = body.new;
-            return this.transactionsService.send(to, quant, body.new.gasSettings);
+            const { to, quant, mnemonic } = body.new;
+            const { mnemonic: mnem, password, path } = mnemonic;
+            return this.transactionsService.send(to, quant, body.new.gasSettings, mnem, password, path);
         }
         else if (body.raw) {
             const { tx } = body.raw;
@@ -59,7 +60,8 @@ export class TransactionsController {
     @ApiOperation({ summary: 'Sign a transaction.' })
     @Post('sign')
     sign(@Body() body: SendNewDto): Promise<string> {
-        const { to, quant, gasSettings } = body;
-        return this.transactionsService.sign(to, quant, gasSettings);
+        const { to, quant, gasSettings, mnemonic } = body;
+        const { mnemonic: mnem, password, path } = mnemonic;
+        return this.transactionsService.sign(to, quant, gasSettings, mnem, password, path);
     }
 }

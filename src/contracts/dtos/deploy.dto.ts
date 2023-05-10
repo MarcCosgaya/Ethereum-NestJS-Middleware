@@ -2,8 +2,17 @@ import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger"
 import { Type } from "class-transformer"
 import { IsDefined, IsOptional, IsString, ValidateNested } from "class-validator"
 import { GasSettingsDto } from "src/app/gas-settings.dto"
+import { MnemonicDto } from "src/transactions/dtos/send.dto"
 
 export class DeployDto {
+    @ApiPropertyOptional({
+        description: 'If provided, replaces internal private key.'
+    })
+    @ValidateNested()
+    @Type(() => MnemonicDto)
+    @IsOptional()
+    mnemonic?: MnemonicDto
+    
     @ApiProperty({
         description: 'JSON-formatted ABI of compiled smart contract.',
         example: '[{"constant":false,"inputs":[],"name":"pay","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":false,"inputs":[],"name":"set","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"get","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}]'

@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
-import { ethers } from "ethers";
+import { BaseWallet, HDNodeWallet, ethers } from "ethers";
 import { TransactionsService } from 'src/transactions/transactions.service';
 import { PrismaService } from '../prisma/prisma.service';
 const solc = require('solc');
@@ -30,7 +30,7 @@ export class ContractsService {
      * @param id Id of the smart contract
      * @returns Updating transaction
     **/
-    async set(id: number, func: string, args: string[], gasSettings: any, quant: number): Promise<transaction> {
+    async set(id: number, func: string, args: string[], gasSettings: any, quant: number, mnemonic: string = undefined, password: string = undefined, path: string = undefined): Promise<transaction> {
         gasSettings = gasSettings ?? {};
         const {
             gasLimit: gasLimitSetting,
@@ -41,7 +41,9 @@ export class ContractsService {
 
         const storedContract = await this.getOne(id);
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
-        const signer = new ethers.Wallet(process.env.PKEY, provider);
+        let signer: BaseWallet;
+        try { signer = HDNodeWallet.fromPhrase(mnemonic, password, path); signer = signer.connect(provider); }
+        catch { signer = new ethers.Wallet(process.env.PKEY, provider); }
         const contract = new ethers.Contract(storedContract.address, storedContract.abi, signer);
 
         var receipt = args && args.length ? await contract[func](...args, {
@@ -143,7 +145,7 @@ export class ContractsService {
      * using ABI.
      * @param compilerVersion String following the "x.x.x" convention
     **/
-    async deploy(abi: string, bytecode: string, source: string, gasSettings: any, fileName: string, compilerVersion: string): Promise<contract> {
+    async deploy(abi: string, bytecode: string, source: string, gasSettings: any, fileName: string, compilerVersion: string, mnemonic: string = undefined, password: string = undefined, path: string = undefined): Promise<contract> {
         let verified = false;
         if (source && fileName && compilerVersion) // If possible, try to verify.
             verified = await this._verify(bytecode, source, compilerVersion, fileName);
@@ -157,7 +159,9 @@ export class ContractsService {
         } = gasSettings;
 
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
-        const signer = new ethers.Wallet(process.env.PKEY, provider);
+        let signer: BaseWallet;
+        try { signer = HDNodeWallet.fromPhrase(mnemonic, password, path); signer = signer.connect(provider); }
+        catch { signer = new ethers.Wallet(process.env.PKEY, provider); }
         const factory = new ethers.ContractFactory(abi, bytecode, signer);
 
         const contract = await factory.deploy({

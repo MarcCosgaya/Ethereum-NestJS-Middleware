@@ -27,15 +27,17 @@ export class ContractsController {
     @Post(':id/call')
     updateFunction(@Body() body: UpdateFunctionBodyDto, @Param() queryParams: UpdateFunctionParamDto): Promise<transaction> {
         const { id } = queryParams;
-        const { func, args, gasSettings, quant } = body;
-        return this.contractsService.set(id, func, args, gasSettings, quant);
+        const { func, args, gasSettings, quant, mnemonic } = body;
+        const { mnemonic: mnem, password, path } = mnemonic;
+        return this.contractsService.set(id, func, args, gasSettings, quant, mnem, password, path);
     }
 
     @ApiOperation({ summary: 'Deploy a precompiled smart contract.' })
     @Post()
     deploy(@Body() body: DeployDto): Promise<contract> {
-        const { abi, bytecode, source, gasSettings, fileName, compilerVersion = 'latest' } = body;
-        return this.contractsService.deploy(abi, bytecode, source, gasSettings, fileName, compilerVersion);
+        const { abi, bytecode, source, gasSettings, fileName, compilerVersion = 'latest', mnemonic } = body;
+        const { mnemonic: mnem, password, path } = mnemonic;
+        return this.contractsService.deploy(abi, bytecode, source, gasSettings, fileName, compilerVersion, mnem, password, path);
     }
 
     @ApiOperation({ summary: 'Verify and update contract in DB from already deployed contract.' })
