@@ -19,7 +19,7 @@ export class TransactionsController {
         if (body.new && body.raw) throw new BadRequestException('Can\'t have both {"new", "raw"} in body')
         else if (body.new) {
             const { to, quant, mnemonic } = body.new;
-            const { mnemonic: mnem, password, path } = mnemonic;
+            const { mnemonic: mnem, password, path } = mnemonic || {};
             return this.transactionsService.send(to, quant, body.new.gasSettings, mnem, password, path);
         }
         else if (body.raw) {
@@ -61,7 +61,7 @@ export class TransactionsController {
     @Post('sign')
     sign(@Body() body: SendNewDto): Promise<string> {
         const { to, quant, gasSettings, mnemonic } = body;
-        const { mnemonic: mnem, password, path } = mnemonic;
+        const { mnemonic: mnem, password, path } = mnemonic || {};
         return this.transactionsService.sign(to, quant, gasSettings, mnem, password, path);
     }
 }

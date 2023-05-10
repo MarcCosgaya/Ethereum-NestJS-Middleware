@@ -28,7 +28,7 @@ export class ContractsController {
     updateFunction(@Body() body: UpdateFunctionBodyDto, @Param() queryParams: UpdateFunctionParamDto): Promise<transaction> {
         const { id } = queryParams;
         const { func, args, gasSettings, quant, mnemonic } = body;
-        const { mnemonic: mnem, password, path } = mnemonic;
+        const { mnemonic: mnem, password, path } = mnemonic || {};
         return this.contractsService.set(id, func, args, gasSettings, quant, mnem, password, path);
     }
 
@@ -36,7 +36,7 @@ export class ContractsController {
     @Post()
     deploy(@Body() body: DeployDto): Promise<contract> {
         const { abi, bytecode, source, gasSettings, fileName, compilerVersion = 'latest', mnemonic } = body;
-        const { mnemonic: mnem, password, path } = mnemonic;
+        const { mnemonic: mnem, password, path } = mnemonic || {};
         return this.contractsService.deploy(abi, bytecode, source, gasSettings, fileName, compilerVersion, mnem, password, path);
     }
 
