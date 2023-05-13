@@ -1,5 +1,5 @@
 import { Type } from "class-transformer"
-import { IsDefined, IsEthereumAddress, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator"
+import { IsDefined, IsEthereumAddress, IsNumber, IsOptional, IsString, ValidateNested, IsPositive } from "class-validator"
 import { GasSettingsDto } from "../../app/gas-settings.dto"
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger"
 
@@ -52,6 +52,7 @@ export class SendNewDto {
         description: 'Quantity (in Ethers).',
         example: 4.3
     })
+    @IsPositive()
     @IsNumber()
     @IsDefined()
     quant: number
