@@ -10,10 +10,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model PKey {
-  value String @unique
-}
-
 model contract {
   id Int @id @default(autoincrement())
   abi String
