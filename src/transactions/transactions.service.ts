@@ -67,7 +67,7 @@ export class TransactionsService {
             maxPriorityFeePerGas: maxPriorityFeePerGasSetting
         };
 
-        const response = await signer.sendTransaction(request) // Somehow ethers still says it's a receipt :(
+        const response = await signer.sendTransaction(request);
         const receipt = await provider.getTransactionReceipt(response.hash);
 
         const { from, value, hash, gasLimit } = response;
@@ -90,7 +90,7 @@ export class TransactionsService {
     async updateTransaction(hash: string): Promise<transaction> {
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
 
-        const response = await provider.getTransaction(hash); // Somehow ethers still says it's a receipt :(
+        const response = await provider.getTransaction(hash);
         if (!response) throw new NotFoundException('Transaction hash not found');
         const receipt = await provider.getTransactionReceipt(hash);
 

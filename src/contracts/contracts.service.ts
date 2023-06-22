@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
-import { BaseWallet, HDNodeWallet, ethers } from "ethers";
+import { BaseWallet, ContractTransactionResponse, HDNodeWallet, ethers } from "ethers";
 import { TransactionsService } from 'src/transactions/transactions.service';
 import { PrismaService } from '../prisma/prisma.service';
 const solc = require('solc');
@@ -21,7 +21,7 @@ export class ContractsService {
         const provider = new ethers.JsonRpcProvider(process.env.RPC_PROVIDER, Number(process.env.CHAIN_ID));
         const contract = new ethers.Contract(storedContract.address, storedContract.abi, provider);
 
-        var returnValue = args && args.length ? await contract[func](args) : await contract[func]();
+        const returnValue = args && args.length ? await contract[func](args) : await contract[func]();
         return returnValue;
     }
 
@@ -46,7 +46,7 @@ export class ContractsService {
         catch { signer = new ethers.Wallet(process.env.PKEY, provider); }
         const contract = new ethers.Contract(storedContract.address, storedContract.abi, signer);
 
-        var receipt = args && args.length ? await contract[func](...args, {
+        const response: ContractTransactionResponse = args && args.length ? await contract[func](...args, {
             gasLimit: gasLimitSetting,
             gasPrice: gasPriceSetting,
             maxFeePerGas: maxFeePerGasSetting,
@@ -59,7 +59,7 @@ export class ContractsService {
             maxPriorityFeePerGas: maxPriorityFeePerGasSetting,
             value: quant ? ethers.parseEther(quant.toString()) : undefined
         });
-        return this.transactionsService.updateTransaction(receipt.hash); // Store and return the tx.
+        return this.transactionsService.updateTransaction(response.hash); // Store and return the tx.
     }
 
     /**
